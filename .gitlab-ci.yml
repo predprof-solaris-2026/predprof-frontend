@@ -12,9 +12,7 @@ build_image:
     - docker:24.0.5-dind
   script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    
     - docker build -t $DOCKER_IMAGE .
-    
     - docker push $DOCKER_IMAGE
   only:
     - main
@@ -46,8 +44,6 @@ deploy_to_server:
         docker run -d \
           -p 2056:3000 \
           --name predprof-frontend \
-          -e MONGODB_URI='$MONGODB_URI' \
-          -e JWT_SECRET='$JWT_SECRET' \
           $DOCKER_IMAGE;
       "
   only:
