@@ -17,7 +17,7 @@ build_image:
     
     - docker push $DOCKER_IMAGE
   only:
-    - master
+    - main
 
 deploy_to_server:
   stage: deploy
@@ -51,4 +51,4 @@ deploy_to_server:
           $DOCKER_IMAGE;
       "
   only:
-    - master
+    - main
