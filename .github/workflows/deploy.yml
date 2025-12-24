@@ -32,23 +32,30 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: BACKEND_URL, DOCKER_USERNAME, DOCKER_PASSWORD
           script: |
-            echo "Login to Docker..."
-            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-            echo "Pulling new image..."
-            docker pull ${{ secrets.DOCKER_USERNAME }}/predprof-frontend:latest
+            docker pull ${{ env.IMAGE_NAME }}
 
-            echo "Stopping old container..."
             docker stop predprof-frontend || true
             docker rm predprof-frontend || true
 
-            echo "Starting new container..."
+            echo "BACKEND_URL=$BACKEND_URL" > .env
+            
+            chmod 600 .env
+
+            # Запускаем контейнер, подключая созданный файл
             docker run -d \
               -p 2056:3000 \
               --name predprof-frontend \
-              ${{ secrets.DOCKER_USERNAME }}/predprof-frontend:latest
+              --env-file .env \
+              ${{ env.IMAGE_NAME }}
