@@ -53,4 +53,5 @@ jobs:
             docker run -d \
               -p 2412:3000 \
               --name predprof-frontend \
+              --restart unless-stopped \
               ${{ env.IMAGE_NAME }}
