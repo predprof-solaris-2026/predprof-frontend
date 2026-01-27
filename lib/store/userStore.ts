@@ -1,6 +1,7 @@
 "use client"
 
 import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
 
 type User = {
   id?: string
@@ -18,12 +19,20 @@ type UserState = {
   clear: () => void
 }
 
-export const useUserStore = create<UserState>((set) => ({
-  token: null,
-  user: null,
-  setToken: (token) => set(() => ({ token })),
-  setUser: (user) => set(() => ({ user })),
-  clear: () => set(() => ({ token: null, user: null })),
-}))
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      setToken: (token) => set(() => ({ token })),
+      setUser: (user) => set(() => ({ user })),
+      clear: () => set(() => ({ token: null, user: null })),
+    }),
+    {
+      name: "user-store",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
 
 export default useUserStore

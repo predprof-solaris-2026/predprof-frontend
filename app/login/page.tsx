@@ -59,7 +59,7 @@ export default function LoginPage() {
         // попытка извлечь данные пользователя из ответа (поддерживаем разные структуры)
         const u = (loginResp as any)?.data?.user || (loginResp as any)?.user || (loginResp as any)?.data?.user_info || (loginResp as any)?.user_info || (loginResp as any)?.profile || null
         if (u) setUser(u)
-        router.push("/")
+        router.push("/profile")
         return
       } else {
         setError("Не удалось получить токен после регистрации")
@@ -85,7 +85,7 @@ export default function LoginPage() {
         setToken(token)
         const u = (resp as any)?.data?.user || (resp as any)?.user || (resp as any)?.data?.user_info || (resp as any)?.user_info || (resp as any)?.profile || null
         if (u) setUser(u)
-        router.push("/")
+        router.push("/profile")
         return
       }
     } catch (e: any) {

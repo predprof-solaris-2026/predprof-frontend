@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { CheckTaskApiTasksTaskIdCheckPostData, CheckTaskApiTasksTaskIdCheckPostErrors, CheckTaskApiTasksTaskIdCheckPostResponses, DeleteTaskApiTasksTaskIdDeleteData, DeleteTaskApiTasksTaskIdDeleteErrors, DeleteTaskApiTasksTaskIdDeleteResponses, GetDefiniteTaskApiTasksTaskIdGetData, GetDefiniteTaskApiTasksTaskIdGetErrors, GetDefiniteTaskApiTasksTaskIdGetResponses, GetLeaderboardApiPvpRatingLeaderboardGetData, GetLeaderboardApiPvpRatingLeaderboardGetErrors, GetLeaderboardApiPvpRatingLeaderboardGetResponses, GetQueueStatusApiPvpQueueStatusGetData, GetQueueStatusApiPvpQueueStatusGetResponses, GetRecentMatchesApiPvpMatchesRecentGetData, GetRecentMatchesApiPvpMatchesRecentGetErrors, GetRecentMatchesApiPvpMatchesRecentGetResponses, GetTasksApiTasksGetData, GetTasksApiTasksGetResponses, GetTasksToJsonApiTasksExportGetData, GetTasksToJsonApiTasksExportGetResponses, LogInUserApiUserLoginPostData, LogInUserApiUserLoginPostErrors, LogInUserApiUserLoginPostResponses, PostTasksApiTasksUploadImportJsonPostData, PostTasksApiTasksUploadImportJsonPostErrors, PostTasksApiTasksUploadImportJsonPostResponses, PostTasksApiTasksUploadPostData, PostTasksApiTasksUploadPostErrors, PostTasksApiTasksUploadPostResponses, RegistrationUserApiUserCreatePostData, RegistrationUserApiUserCreatePostErrors, RegistrationUserApiUserCreatePostResponses, UpdateTaskApiTasksTaskIdPatchData, UpdateTaskApiTasksTaskIdPatchErrors, UpdateTaskApiTasksTaskIdPatchResponses } from './types.gen';
+import type { CheckAnswerApiTrainingTaskTaskIdCheckPostData, CheckAnswerApiTrainingTaskTaskIdCheckPostErrors, CheckAnswerApiTrainingTaskTaskIdCheckPostResponses, CheckTaskApiTasksTaskIdCheckPostData, CheckTaskApiTasksTaskIdCheckPostErrors, CheckTaskApiTasksTaskIdCheckPostResponses, DeleteTaskApiTasksTaskIdDeleteData, DeleteTaskApiTasksTaskIdDeleteErrors, DeleteTaskApiTasksTaskIdDeleteResponses, GetAllUsersApiUserGetData, GetAllUsersApiUserGetResponses, GetDefiniteTaskApiTasksGetTaskIdGetData, GetDefiniteTaskApiTasksGetTaskIdGetErrors, GetDefiniteTaskApiTasksGetTaskIdGetResponses, GetLeaderboardApiPvpRatingLeaderboardGetData, GetLeaderboardApiPvpRatingLeaderboardGetErrors, GetLeaderboardApiPvpRatingLeaderboardGetResponses, GetQueueStatusApiPvpQueueStatusGetData, GetQueueStatusApiPvpQueueStatusGetResponses, GetRecentMatchesApiPvpMatchesRecentGetData, GetRecentMatchesApiPvpMatchesRecentGetErrors, GetRecentMatchesApiPvpMatchesRecentGetResponses, GetTaskHintApiTrainingTaskTaskIdHintGetData, GetTaskHintApiTrainingTaskTaskIdHintGetErrors, GetTaskHintApiTrainingTaskTaskIdHintGetResponses, GetTasksApiTasksGetData, GetTasksApiTasksGetResponses, GetTasksApiTrainingGetData, GetTasksApiTrainingGetErrors, GetTasksApiTrainingGetResponses, GetTasksToJsonApiTasksExportGetData, GetTasksToJsonApiTasksExportGetResponses, GetUserByIdApiUserUserIdGetData, GetUserByIdApiUserUserIdGetErrors, GetUserByIdApiUserUserIdGetResponses, GetUserByTokenApiUserTokenGetData, GetUserByTokenApiUserTokenGetResponses, LogInUserApiUserLoginPostData, LogInUserApiUserLoginPostErrors, LogInUserApiUserLoginPostResponses, PostTasksApiTasksUploadImportJsonPostData, PostTasksApiTasksUploadImportJsonPostErrors, PostTasksApiTasksUploadImportJsonPostResponses, PostTasksApiTasksUploadPostData, PostTasksApiTasksUploadPostErrors, PostTasksApiTasksUploadPostResponses, RegistrationUserApiUserCreatePostData, RegistrationUserApiUserCreatePostErrors, RegistrationUserApiUserCreatePostResponses, UpdateTaskApiTasksTaskIdPatchData, UpdateTaskApiTasksTaskIdPatchErrors, UpdateTaskApiTasksTaskIdPatchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -42,6 +42,25 @@ export const logInUserApiUserLoginPost = <ThrowOnError extends boolean = false>(
         ...options.headers
     }
 });
+
+/**
+ * Get User By Token
+ */
+export const getUserByTokenApiUserTokenGet = <ThrowOnError extends boolean = false>(options?: Options<GetUserByTokenApiUserTokenGetData, ThrowOnError>) => (options?.client ?? client).get<GetUserByTokenApiUserTokenGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/token',
+    ...options
+});
+
+/**
+ * Get User By Id
+ */
+export const getUserByIdApiUserUserIdGet = <ThrowOnError extends boolean = false>(options: Options<GetUserByIdApiUserUserIdGetData, ThrowOnError>) => (options.client ?? client).get<GetUserByIdApiUserUserIdGetResponses, GetUserByIdApiUserUserIdGetErrors, ThrowOnError>({ url: '/api/user/{user_id}', ...options });
+
+/**
+ * Get All Users
+ */
+export const getAllUsersApiUserGet = <ThrowOnError extends boolean = false>(options?: Options<GetAllUsersApiUserGetData, ThrowOnError>) => (options?.client ?? client).get<GetAllUsersApiUserGetResponses, unknown, ThrowOnError>({ url: '/api/user', ...options });
 
 /**
  * Post Tasks
@@ -94,13 +113,6 @@ export const checkTaskApiTasksTaskIdCheckPost = <ThrowOnError extends boolean = 
 export const deleteTaskApiTasksTaskIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteTaskApiTasksTaskIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteTaskApiTasksTaskIdDeleteResponses, DeleteTaskApiTasksTaskIdDeleteErrors, ThrowOnError>({ url: '/api/tasks/{task_id}', ...options });
 
 /**
- * Get Definite Task
- *
- * get definite task by id
- */
-export const getDefiniteTaskApiTasksTaskIdGet = <ThrowOnError extends boolean = false>(options: Options<GetDefiniteTaskApiTasksTaskIdGetData, ThrowOnError>) => (options.client ?? client).get<GetDefiniteTaskApiTasksTaskIdGetResponses, GetDefiniteTaskApiTasksTaskIdGetErrors, ThrowOnError>({ url: '/api/tasks/{task_id}', ...options });
-
-/**
  * Update Task
  *
  * edit task by id
@@ -120,6 +132,13 @@ export const updateTaskApiTasksTaskIdPatch = <ThrowOnError extends boolean = fal
  * get all tasks
  */
 export const getTasksApiTasksGet = <ThrowOnError extends boolean = false>(options?: Options<GetTasksApiTasksGetData, ThrowOnError>) => (options?.client ?? client).get<GetTasksApiTasksGetResponses, unknown, ThrowOnError>({ url: '/api/tasks/', ...options });
+
+/**
+ * Get Definite Task
+ *
+ * get definite task by id
+ */
+export const getDefiniteTaskApiTasksGetTaskIdGet = <ThrowOnError extends boolean = false>(options: Options<GetDefiniteTaskApiTasksGetTaskIdGetData, ThrowOnError>) => (options.client ?? client).get<GetDefiniteTaskApiTasksGetTaskIdGetResponses, GetDefiniteTaskApiTasksGetTaskIdGetErrors, ThrowOnError>({ url: '/api/tasks/get/{task_id}', ...options });
 
 /**
  * Get Tasks To Json
@@ -152,3 +171,30 @@ export const getRecentMatchesApiPvpMatchesRecentGet = <ThrowOnError extends bool
  * Get Leaderboard
  */
 export const getLeaderboardApiPvpRatingLeaderboardGet = <ThrowOnError extends boolean = false>(options?: Options<GetLeaderboardApiPvpRatingLeaderboardGetData, ThrowOnError>) => (options?.client ?? client).get<GetLeaderboardApiPvpRatingLeaderboardGetResponses, GetLeaderboardApiPvpRatingLeaderboardGetErrors, ThrowOnError>({ url: '/api/pvp/rating-leaderboard', ...options });
+
+/**
+ * Get Tasks
+ */
+export const getTasksApiTrainingGet = <ThrowOnError extends boolean = false>(options?: Options<GetTasksApiTrainingGetData, ThrowOnError>) => (options?.client ?? client).get<GetTasksApiTrainingGetResponses, GetTasksApiTrainingGetErrors, ThrowOnError>({ url: '/api/training/', ...options });
+
+/**
+ * Get Task Hint
+ */
+export const getTaskHintApiTrainingTaskTaskIdHintGet = <ThrowOnError extends boolean = false>(options: Options<GetTaskHintApiTrainingTaskTaskIdHintGetData, ThrowOnError>) => (options.client ?? client).get<GetTaskHintApiTrainingTaskTaskIdHintGetResponses, GetTaskHintApiTrainingTaskTaskIdHintGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/training/task/{task_id}/hint',
+    ...options
+});
+
+/**
+ * Check Answer
+ */
+export const checkAnswerApiTrainingTaskTaskIdCheckPost = <ThrowOnError extends boolean = false>(options: Options<CheckAnswerApiTrainingTaskTaskIdCheckPostData, ThrowOnError>) => (options.client ?? client).post<CheckAnswerApiTrainingTaskTaskIdCheckPostResponses, CheckAnswerApiTrainingTaskTaskIdCheckPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/training/task/{task_id}/check',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});

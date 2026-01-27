@@ -46,17 +46,15 @@ export async function checkAnswer(
         const data = (await checkTaskApiTasksTaskIdCheckPost({
             path: { task_id: taskId },
             body: { answer: answer },
-            responseStyle: 'data',
-            throwOnError: true,
-        })) as unknown;
+        })).data as unknown;
 
-        // Проверим структуру ответа
+        console.log(data)
+
         if (typeof data === 'object' && data !== null) {
             const d = data as any;
             if (typeof d.correct === 'boolean' && typeof d.correct_answer === 'string') {
                 return { correct: d.correct, correct_answer: d.correct_answer };
             }
-            // Если сервер вернул другой формат — попытаемся привести к человеко-понятному сообщению
             return { correct: false, correct_answer: JSON.stringify(d) };
         }
 

@@ -73,7 +73,10 @@ export type HttpValidationError = {
  * TaskSchema
  */
 export type TaskSchema = {
-    id: string,
+    /**
+     * Id
+     */
+    id: string;
     /**
      * Subject
      */
@@ -91,7 +94,7 @@ export type TaskSchema = {
     /**
      * Hint
      */
-    hint: string;
+    hint?: string | null;
     /**
      * Answer
      */
@@ -129,6 +132,36 @@ export type UserLogIn = {
      * User Token
      */
     user_token: string;
+};
+
+/**
+ * UserResponse
+ */
+export type UserResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Elo Rating
+     */
+    elo_rating: number;
+    /**
+     * Is Blocked
+     */
+    is_blocked: boolean;
 };
 
 /**
@@ -220,6 +253,70 @@ export type LogInUserApiUserLoginPostResponses = {
 };
 
 export type LogInUserApiUserLoginPostResponse = LogInUserApiUserLoginPostResponses[keyof LogInUserApiUserLoginPostResponses];
+
+export type GetUserByTokenApiUserTokenGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user/token';
+};
+
+export type GetUserByTokenApiUserTokenGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserResponse;
+};
+
+export type GetUserByTokenApiUserTokenGetResponse = GetUserByTokenApiUserTokenGetResponses[keyof GetUserByTokenApiUserTokenGetResponses];
+
+export type GetUserByIdApiUserUserIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/user/{user_id}';
+};
+
+export type GetUserByIdApiUserUserIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUserByIdApiUserUserIdGetError = GetUserByIdApiUserUserIdGetErrors[keyof GetUserByIdApiUserUserIdGetErrors];
+
+export type GetUserByIdApiUserUserIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserResponse;
+};
+
+export type GetUserByIdApiUserUserIdGetResponse = GetUserByIdApiUserUserIdGetResponses[keyof GetUserByIdApiUserUserIdGetResponses];
+
+export type GetAllUsersApiUserGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user';
+};
+
+export type GetAllUsersApiUserGetResponses = {
+    /**
+     * Response Get All Users Api User Get
+     *
+     * Successful Response
+     */
+    200: Array<UserResponse>;
+};
+
+export type GetAllUsersApiUserGetResponse = GetAllUsersApiUserGetResponses[keyof GetAllUsersApiUserGetResponses];
 
 export type PostTasksApiTasksUploadPostData = {
     body: TaskSchema;
@@ -325,34 +422,6 @@ export type DeleteTaskApiTasksTaskIdDeleteResponses = {
     200: unknown;
 };
 
-export type GetDefiniteTaskApiTasksTaskIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Task Id
-         */
-        task_id: string;
-    };
-    query?: never;
-    url: '/api/tasks/{task_id}';
-};
-
-export type GetDefiniteTaskApiTasksTaskIdGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetDefiniteTaskApiTasksTaskIdGetError = GetDefiniteTaskApiTasksTaskIdGetErrors[keyof GetDefiniteTaskApiTasksTaskIdGetErrors];
-
-export type GetDefiniteTaskApiTasksTaskIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
 export type UpdateTaskApiTasksTaskIdPatchData = {
     body: TaskSchema;
     path: {
@@ -389,6 +458,34 @@ export type GetTasksApiTasksGetData = {
 };
 
 export type GetTasksApiTasksGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetDefiniteTaskApiTasksGetTaskIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/tasks/get/{task_id}';
+};
+
+export type GetDefiniteTaskApiTasksGetTaskIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetDefiniteTaskApiTasksGetTaskIdGetError = GetDefiniteTaskApiTasksGetTaskIdGetErrors[keyof GetDefiniteTaskApiTasksGetTaskIdGetErrors];
+
+export type GetDefiniteTaskApiTasksGetTaskIdGetResponses = {
     /**
      * Successful Response
      */
@@ -473,6 +570,110 @@ export type GetLeaderboardApiPvpRatingLeaderboardGetErrors = {
 export type GetLeaderboardApiPvpRatingLeaderboardGetError = GetLeaderboardApiPvpRatingLeaderboardGetErrors[keyof GetLeaderboardApiPvpRatingLeaderboardGetErrors];
 
 export type GetLeaderboardApiPvpRatingLeaderboardGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetTasksApiTrainingGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Subject
+         */
+        subject?: string | null;
+        /**
+         * Theme
+         */
+        theme?: Theme | null;
+        /**
+         * Difficulty
+         */
+        difficulty?: Difficulty | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Skip
+         */
+        skip?: number;
+    };
+    url: '/api/training/';
+};
+
+export type GetTasksApiTrainingGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTasksApiTrainingGetError = GetTasksApiTrainingGetErrors[keyof GetTasksApiTrainingGetErrors];
+
+export type GetTasksApiTrainingGetResponses = {
+    /**
+     * Response Get Tasks Api Training  Get
+     *
+     * Successful Response
+     */
+    200: Array<TaskSchema>;
+};
+
+export type GetTasksApiTrainingGetResponse = GetTasksApiTrainingGetResponses[keyof GetTasksApiTrainingGetResponses];
+
+export type GetTaskHintApiTrainingTaskTaskIdHintGetData = {
+    body?: never;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/training/task/{task_id}/hint';
+};
+
+export type GetTaskHintApiTrainingTaskTaskIdHintGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetTaskHintApiTrainingTaskTaskIdHintGetError = GetTaskHintApiTrainingTaskTaskIdHintGetErrors[keyof GetTaskHintApiTrainingTaskTaskIdHintGetErrors];
+
+export type GetTaskHintApiTrainingTaskTaskIdHintGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type CheckAnswerApiTrainingTaskTaskIdCheckPostData = {
+    body: CheckAnswer;
+    path: {
+        /**
+         * Task Id
+         */
+        task_id: string;
+    };
+    query?: never;
+    url: '/api/training/task/{task_id}/check';
+};
+
+export type CheckAnswerApiTrainingTaskTaskIdCheckPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CheckAnswerApiTrainingTaskTaskIdCheckPostError = CheckAnswerApiTrainingTaskTaskIdCheckPostErrors[keyof CheckAnswerApiTrainingTaskTaskIdCheckPostErrors];
+
+export type CheckAnswerApiTrainingTaskTaskIdCheckPostResponses = {
     /**
      * Successful Response
      */

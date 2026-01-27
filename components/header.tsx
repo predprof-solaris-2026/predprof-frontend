@@ -9,10 +9,11 @@ import { User, LogIn } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import useUserStore from "@/lib/store/userStore";
 import { getTokenFromCookie, clearTokenCookie } from "@/lib/auth";
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
+    const router = useRouter();
     const token = useUserStore((s) => s.token);
-    const user = useUserStore((s) => s.user);
     const setToken = useUserStore((s) => s.setToken);
     const clear = useUserStore((s) => s.clear);
 
@@ -24,6 +25,7 @@ export default function Header() {
     const handleLogout = () => {
         clearTokenCookie();
         clear();
+        router.push("/login");
     };
 
     return (
@@ -42,7 +44,7 @@ export default function Header() {
                 {token ? (
                     <div className="flex items-center gap-2">
                         <Link href="/profile">
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className='p-5'>
                                 <User className="size-4" /> Профиль
                             </Button>
                         </Link>
