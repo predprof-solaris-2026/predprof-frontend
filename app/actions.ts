@@ -45,7 +45,7 @@ export async function checkAnswer(
     };
 
     try {
-        const cookieStore = cookies();
+        const cookieStore = await cookies();
         const token = tokenFromClient ?? cookieStore.get('token')?.value ?? null;
 
         const res = await checkAnswerApiTrainingTaskTaskIdCheckPost({
@@ -80,7 +80,7 @@ export async function requestHint(taskId: string, tokenFromClient?: string | nul
     if (!taskId) return { error: 'Отсутствует идентификатор задания' };
 
     try {
-        const cookieStore = cookies();
+        const cookieStore = await cookies();
         const token = tokenFromClient ?? cookieStore.get('token')?.value ?? null;
 
         const res = await getTaskHintApiTrainingTaskTaskIdHintGet({ path: { task_id: taskId }, headers: token ? { Authorization: `Bearer ${token}` } : undefined });

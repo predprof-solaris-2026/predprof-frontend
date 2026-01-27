@@ -68,7 +68,7 @@ export default function AdminPage() {
       setSelected(null)
       loadTasks()
     } catch (e: any) {
-      toast.error(e?.message || 'Ошибка')
+      toast({ title: e?.message || 'Ошибка', variant: 'destructive' })
     } finally { setLoading(false) }
   }
 
@@ -80,7 +80,7 @@ export default function AdminPage() {
       toast({ title: 'Обновлено', variant: 'success' })
       loadTasks()
     } catch (e: any) {
-      toast.error(e?.message || 'Ошибка')
+      toast({ title: e?.message || 'Ошибка', variant: 'destructive' })
     } finally { setLoading(false) }
   }
 
@@ -91,7 +91,7 @@ export default function AdminPage() {
       toast({ title: 'Удалено', variant: 'success' })
       loadTasks()
     } catch (e: any) {
-      toast.error(e?.message || 'Ошибка')
+      toast({ title: e?.message || 'Ошибка', variant: 'destructive' })
     }
   }
 

@@ -1,36 +1,36 @@
-# BUILD
-FROM node:20-alpine AS builder
-
+FROM node:20-alpine AS deps
+# RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-RUN npm install --include=dev
+RUN npm ci
 
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-COPY .env .env
-
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# RUNTIME
 FROM node:20-alpine AS runner
-
 WORKDIR /app
 
-COPY package*.json ./
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm ci --production && npm install typescript
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
-COPY --from=builder /app/.env .env
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-RUN rm -rf /app/node_modules/.cache /root/.npm
+USER nextjs
 
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-ENV NODE_ENV=production
-
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
