@@ -54,7 +54,7 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
     }
 
     return (
-        <div className="flex justify-start flex-col h-full gap-5 px-10">
+        <div className="flex justify-start flex-col h-full gap-4 px-4 sm:px-10">
             <nav
                 className="flex items-center gap-3 px-3 pt-2 bg-accent rounded-xl overflow-x-scroll shadow-xl"
                 style={{
@@ -67,7 +67,7 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                     <Plus className="size-4" />
                 </Button>
             </nav>
-            <div className="flex flex-col content-between flex-1 pt-2 py-10 w-full">
+                <div className="flex flex-col content-between flex-1 pt-2 py-10 w-full">
                 <div className="flex flex-col flex-1 gap-3">
                     <span className="opacity-50">
                         {task.subject} - {task.theme}
@@ -75,11 +75,11 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                     <header className="text-3xl font-medium">
                         {task.title}
                     </header>
-                    <div className="mt-5 w-2/3 text-justify">
+                    <div className="mt-5 w-full md:w-2/3 text-justify">
                         {task.task_text}
                     </div>
                 </div>
-                <div className="flex gap-5 items-center justify-start max-w-1/2 flex-wrap">
+                <div className="flex gap-3 sm:gap-5 items-center justify-start max-w-full md:max-w-1/2 flex-wrap">
                     {correctAnswer && (
                         <div
                             className={`w-full p-3 rounded-md flex items-center gap-3 text-sm ${
@@ -106,7 +106,7 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                         Введите свой ответ в поле ниже:
                     </div>
 
-                    <div className="w-full flex items-stretch gap-5">
+                    <div className="w-full flex items-stretch gap-3 sm:gap-5">
                         <Input
                             placeholder="Ваш ответ"
                             value={answer}

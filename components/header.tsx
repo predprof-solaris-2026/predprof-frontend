@@ -35,23 +35,23 @@ export default function Header() {
                     <Image
                         src={logo}
                         alt="Logo"
-                        height={60}
-                        className="rounded-xl"
+                        height={48}
+                        className="rounded-xl h-12 w-auto"
                     />
                 </Link>
             </div>
             <div className="flex items-center gap-3">
                 {token ? (
-                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                         <Link href="/profile">
-                            <Button variant="ghost" size="sm" className='p-5'>
+                            <Button variant="ghost" size="sm" className='px-3 py-2 sm:p-5'>
                                 <User className="size-4" /> Профиль
                             </Button>
                         </Link>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="p-5"
+                            className="px-3 py-2 sm:p-5"
                             onClick={handleLogout}
                         >
                             Выйти
@@ -59,7 +59,7 @@ export default function Header() {
                     </div>
                 ) : (
                     <Link href="/login">
-                        <Button size="sm" className="p-5">
+                        <Button size="sm" className="px-3 py-2 sm:p-5">
                             <LogIn className="size-4" /> Войти
                         </Button>
                     </Link>
