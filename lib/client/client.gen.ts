@@ -14,3 +14,26 @@ import type { ClientOptions as ClientOptions2 } from './types.gen';
 export type CreateClientConfig<T extends ClientOptions = ClientOptions2> = (override?: Config<ClientOptions & T>) => Config<Required<ClientOptions> & T>;
 
 export const client = createClient(createConfig<ClientOptions2>({ baseUrl: 'https://solaris.sherstd.ru' }));
+
+// Global response interceptor: on 401/403 in browser, clear auth and redirect to login.
+if (typeof window !== 'undefined') {
+	try {
+		client.interceptors.response.use(async (response) => {
+			try {
+				if (response && (response.status === 401 || response.status === 403)) {
+					// clear token cookie
+					try { document.cookie = `token=; path=/; max-age=0; samesite=lax`; } catch {}
+					// clear persisted user store (zustand)
+					try { localStorage.removeItem('user-store'); } catch {}
+					// redirect to login
+					try { window.location.href = '/login'; } catch {}
+				}
+			} catch (e) {
+				// noop
+			}
+			return response;
+		});
+	} catch (e) {
+		// noop
+	}
+}

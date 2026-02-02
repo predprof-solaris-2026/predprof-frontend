@@ -18,10 +18,17 @@ import {
   getUserStatsApiStatsUsersUserIdGet
 } from '@/lib/client'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import useUserStore from '@/lib/store/userStore'
+import { logInUserApiUserLoginPost } from '@/lib/client'
+import { useRouter } from 'next/navigation'
 
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
-  const [password, setPassword] = useState('')
+  const adminToken = useUserStore((s) => s.adminToken)
+  const setAdminToken = useUserStore((s) => s.setAdminToken)
+  const router = useRouter()
+  const [adminLogin, setAdminLogin] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<any | null>(null)
@@ -34,13 +41,10 @@ export default function AdminPage() {
   const [qDifficulty, setQDifficulty] = useState('')
 
   useEffect(() => {
-    // check admin
-    fetch('/api/admin/me').then((r) => {
-      if (r.ok) setIsAdmin(true)
-      else setIsAdmin(false)
-    }).catch(() => setIsAdmin(false))
+    // simple check: if adminToken exists in store, consider admin logged in
+    setIsAdmin(adminToken ? true : false)
     loadTasks()
-  }, [])
+  }, [adminToken, router])
 
   const loadTasks = async () => {
     try {
@@ -53,12 +57,18 @@ export default function AdminPage() {
   }
 
   const handleLogin = async () => {
-    const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) })
-    if (res.ok) {
-      setIsAdmin(true)
-      toast({ title: 'Вход выполнен', variant: 'success' })
-    } else {
-      toast({ title: 'Неверный пароль', variant: 'destructive' })
+    try {
+      const resp: any = await logInUserApiUserLoginPost({ body: { username: adminLogin, password: adminPassword } })
+      const data = (resp as any)?.data || resp
+      if (data?.access_token) {
+        setAdminToken(data.access_token)
+        setIsAdmin(true)
+        toast({ title: 'Вход выполнен', variant: 'success' })
+      } else {
+        toast({ title: 'Неверные данные', variant: 'destructive' })
+      }
+    } catch (e: any) {
+      toast({ title: e?.message || 'Ошибка входа', variant: 'destructive' })
     }
   }
 
@@ -133,9 +143,11 @@ export default function AdminPage() {
       <div className="max-w-xl mx-auto">
         <h2 className="text-2xl mb-4">Админ вход</h2>
         <div className="space-y-2">
+          <Label>Логин</Label>
+          <Input value={adminLogin} onChange={(e) => setAdminLogin(e.target.value)} />
           <Label>Пароль</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <div className="flex gap-2">
+          <Input type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} />
+          <div className="flex gap-2 mt-2">
             <Button onClick={handleLogin}>Войти</Button>
           </div>
         </div>
@@ -302,6 +314,7 @@ export default function AdminPage() {
 }
 
 function UsersAdmin() {
+  const adminToken = useUserStore((s) => s.adminToken)
   const [users, setUsers] = useState<any[]>([])
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [userStats, setUserStats] = useState<any | null>(null)
@@ -324,7 +337,7 @@ function UsersAdmin() {
     setSelectedUser(u)
     setUserStats(null)
     try {
-      const resp: any = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: String(u.id) } })
+      const resp: any = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: String(u.id) }, auth: adminToken })
       const data = resp?.data || resp
       setUserStats(data)
     } catch (e) {

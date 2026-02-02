@@ -12,8 +12,10 @@ import {
   MessageSquare, CheckCircle2, XCircle, 
   Trophy, Users, Swords, Hash
 } from "lucide-react"
-import { getTokenFromCookie } from "@/lib/auth"
+import { getTokenFromCookie, clearTokenCookie } from "@/lib/auth"
 import useUserStore from "@/lib/store/userStore"
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/toast'
 import Leaderboard from "@/components/leaderboard"
 import { cn } from "@/lib/utils"
 import { getUserByIdApiUserUserIdGet } from "@/lib/client"
@@ -46,6 +48,8 @@ export default function PvpPage() {
   const lastSentTaskIdRef = useRef<string | null>(null)
   const autoResentRef = useRef<boolean>(false)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     return () => {
@@ -160,6 +164,12 @@ export default function PvpPage() {
         setQueueMessage(msg.message || 'Поиск противника...')
         if (msg.queue_size != null) setQueueSize(msg.queue_size)
         break
+      case 'unauthorized':
+        // server indicates auth failure for websocket — clear auth and redirect to login
+        try { clearTokenCookie() } catch {}
+        try { (useUserStore as any).getState().clear() } catch {}
+        try { router.push('/login') } catch {}
+        break
       case 'canceled':
         setStatus('idle')
         setQueueMessage(null)
@@ -198,6 +208,25 @@ export default function PvpPage() {
         startAnswerWatchdog()
         break
       case 'match_result':
+        // Guard: if server returned a match where both players are the same user, treat as error
+        try {
+          const p1id = msg?.p1?.user_id
+          const p2id = msg?.p2?.user_id
+          if (p1id && p2id && p1id === p2id) {
+            console.error('Server paired user with themself', p1id)
+            toast({ title: 'Ошибка матча', description: 'Сервер подобрал матч с самим собой — попытка отменена', variant: 'destructive' })
+            // disconnect and reset
+            try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) {}
+            try { wsRef.current?.close() } catch (e) {}
+            wsRef.current = null
+            setStatus('idle')
+            setRound(0)
+            setTask(null)
+            lastTaskIdRef.current = null
+            clearAnswerWatchdog()
+            break
+          }
+        } catch (e) { console.error(e) }
         setMatchResult(msg)
         setStatus('idle')
         setRound(0)
@@ -226,6 +255,24 @@ export default function PvpPage() {
           try { wsRef.current = null } catch {}
         break
       case 'finished':
+        // Guard: avoid self-match
+        try {
+          const p1id = msg?.p1?.user_id
+          const p2id = msg?.p2?.user_id
+          if (p1id && p2id && p1id === p2id) {
+            console.error('Server finished match with same user', p1id)
+            toast({ title: 'Ошибка матча', description: 'Сервер завершил матч с самим собой — попытка отменена', variant: 'destructive' })
+            try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) {}
+            try { wsRef.current?.close() } catch (e) {}
+            wsRef.current = null
+            setStatus('idle')
+            setRound(0)
+            setTask(null)
+            lastTaskIdRef.current = null
+            clearAnswerWatchdog()
+            break
+          }
+        } catch (e) { console.error(e) }
         setMatchResult(msg)
         setStatus('idle')
         setRound(0)
@@ -387,12 +434,7 @@ export default function PvpPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">{queueMessage}</h3>
-                  {queueSize !== null && (
-                    <Badge variant="outline" className="gap-1">
-                      <Hash className="h-3 w-3" /> В очереди: {queueSize}
-                    </Badge>
-                  )}
+                  <h3 className="font-semibold text-lg">Ищем соперника...</h3>
                 </div>
                 <Button variant="outline" onClick={cancelQueue}>
                   <X className="mr-2 h-4 w-4" /> Отменить поиск
