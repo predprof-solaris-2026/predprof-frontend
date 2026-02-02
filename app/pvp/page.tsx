@@ -42,6 +42,9 @@ export default function PvpPage() {
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
   const [waitingForNext, setWaitingForNext] = useState(false)
   const answerWatchdogRef = useRef<number | null>(null)
+  const lastSentAnswerRef = useRef<string | null>(null)
+  const lastSentTaskIdRef = useRef<string | null>(null)
+  const autoResentRef = useRef<boolean>(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -114,12 +117,32 @@ export default function PvpPage() {
   const startAnswerWatchdog = () => {
     clearAnswerWatchdog()
     setWaitingForNext(true)
-    // if no next task or match_result arrives in 12s, clear waiting state
+    // if no next task or match_result arrives in 6s, try auto-resend last answer once,
+    // otherwise clear waiting state
     answerWatchdogRef.current = window.setTimeout(() => {
+      // attempt one automatic resend if possible
+      if (lastSentAnswerRef.current && !autoResentRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        try {
+          wsRef.current.send(JSON.stringify({ type: 'answer', answer: lastSentAnswerRef.current }))
+          autoResentRef.current = true
+          console.warn('Auto-resending last answer due to watchdog timeout')
+          // keep waiting state and restart watchdog for one more interval
+          setWaitingForNext(true)
+          answerWatchdogRef.current = window.setTimeout(() => {
+            setWaitingForNext(false)
+            answerWatchdogRef.current = null
+            console.warn('Answer watchdog expired — re-enabling UI')
+          }, 6000)
+          return
+        } catch (e) {
+          console.error('Auto-resend failed', e)
+        }
+      }
+
       setWaitingForNext(false)
       answerWatchdogRef.current = null
       console.warn('Answer watchdog expired — re-enabling UI')
-    }, 12000)
+    }, 6000)
   }
 
   const clearAnswerWatchdog = () => {
@@ -154,8 +177,12 @@ export default function PvpPage() {
         setStatus('in_match')
         // There are 4 rounds (server sends 0..3 or similar); allow up to 4
         setRound((r) => Math.min(4, r + 1))
-        const newTask = { id: incomingId ?? (msg.task?.id ?? ''), title: msg.title ?? msg.task?.title, task_text: msg.task_text ?? msg.task?.task_text } || null
+        const newTask = { id: incomingId ?? (msg.task?.id ?? ''), title: msg.title ?? msg.task?.title, task_text: msg.task_text ?? msg.task?.task_text };
         setTask(newTask)
+        // clear last-submitted answer tracking on new task
+        lastSentAnswerRef.current = null
+        lastSentTaskIdRef.current = null
+        autoResentRef.current = false
         if (newTask?.id) lastTaskIdRef.current = newTask.id
         setMatchResult(null)
         setLastAnswerReceived(null)
@@ -189,6 +216,10 @@ export default function PvpPage() {
         } catch (e) { console.error(e) }
         // done with this match — clear watchdog
         clearAnswerWatchdog()
+        // clear last-submitted answer tracking on match end
+        lastSentAnswerRef.current = null
+        lastSentTaskIdRef.current = null
+        autoResentRef.current = false
           try {
             wsRef.current?.close()
           } catch (e) { console.error(e) }
@@ -205,6 +236,9 @@ export default function PvpPage() {
           if (p2id) fetchUserName(p2id)
         } catch (e) { console.error(e) }
         clearAnswerWatchdog()
+        lastSentAnswerRef.current = null
+        lastSentTaskIdRef.current = null
+        autoResentRef.current = false
           try {
             wsRef.current?.send(JSON.stringify({ type: 'disconnect' }))
           } catch (e) { console.error(e) }
@@ -360,7 +394,7 @@ export default function PvpPage() {
                     </Badge>
                   )}
                 </div>
-                <Button variant="destructive" variant="outline" onClick={cancelQueue}>
+                <Button variant="outline" onClick={cancelQueue}>
                   <X className="mr-2 h-4 w-4" /> Отменить поиск
                 </Button>
               </div>

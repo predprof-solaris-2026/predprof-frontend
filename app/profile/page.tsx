@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Mail, Hash, Star, Slash } from "lucide-react"
 import useUserStore from "@/lib/store/userStore"
-import { getUserByIdApiUserUserIdGet } from "@/lib/client"
+import { getUserByIdApiUserUserIdGet, getMyStatsApiStatsMeGet, getUserStatsApiStatsUsersUserIdGet, getMyRatingHistoryApiRatingHistoryMeGet, getWinProbabilityApiRatingProbabilityGet, getRatingProjectionApiRatingProjectionGet } from "@/lib/client"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { getTokenFromCookie } from "@/lib/auth"
 import Link from "next/link"
 
@@ -15,6 +17,11 @@ export default function ProfilePage() {
   const setStoreUser = useUserStore((s) => s.setUser)
   const [user, setUser] = useState<any | null>(storeUser || null)
   const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState<any | null>(null)
+  const [history, setHistory] = useState<any | null>(null)
+  const [oppRating, setOppRating] = useState<number | ''>('')
+  const [prob, setProb] = useState<any | null>(null)
+  const [projection, setProjection] = useState<any | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -87,7 +94,40 @@ export default function ProfilePage() {
       }
     }
 
+    const loadStats = async (token?: string | null, id?: string) => {
+      try {
+        const options: any = {}
+        if (token) options.headers = { Authorization: `Bearer ${token}` }
+        let resp: any
+        if (token && (!id || id === String(storeUser?.id))) {
+          resp = await getMyStatsApiStatsMeGet(options)
+        } else if (id) {
+          resp = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: id } })
+        }
+        const data = resp?.data || resp
+        if (mounted && data) setStats(data)
+      } catch (e) {
+        console.error('Failed to load stats', e)
+      }
+    }
+
+    const loadHistory = async (token?: string | null) => {
+      if (!token) return
+      try {
+        const resp: any = await getMyRatingHistoryApiRatingHistoryMeGet({ headers: { Authorization: `Bearer ${token}` } })
+        const data = resp?.data || resp
+        if (mounted) setHistory(data)
+      } catch (e) {
+        console.error('Failed to load history', e)
+      }
+    }
+
     tryLoad()
+    // load stats and history
+    const _token = getTokenFromCookie()
+    if (storeUser?.id) loadStats(_token, String(storeUser.id))
+    else if (_token) loadStats(_token)
+    if (_token) loadHistory(_token)
 
     return () => { mounted = false }
   }, [storeUser?.id, setStoreUser])
@@ -184,6 +224,89 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          {stats && (
+            <div className="grid gap-6">
+              <h3 className="text-lg font-semibold">Статистика</h3>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-4 border rounded">
+                  <div className="text-sm text-muted-foreground">PVP</div>
+                  <div className="text-xl font-bold">{stats.pvp?.wins ?? 0} / {stats.pvp?.matches ?? 0} побед</div>
+                  <div className="text-sm text-muted-foreground">Побед: {stats.pvp?.wins ?? 0} • Поражений: {stats.pvp?.losses ?? 0} • Ничьих: {stats.pvp?.draws ?? 0}</div>
+                </div>
+
+                <div className="p-4 border rounded">
+                  <div className="text-sm text-muted-foreground">Тренировка</div>
+                  <div className="text-xl font-bold">{stats.training?.correct ?? 0} / {stats.training?.attempts ?? 0}</div>
+                  <div className="text-sm text-muted-foreground">Точность: {stats.training?.accuracy_pct ?? 0}%</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-6">
+            {prob && (
+              <div className="p-3 border rounded">
+                <div>Мой рейтинг: {prob.my_rating}</div>
+                <div>Рейтинг соперника: {prob.opponent_rating}</div>
+                <div>Ожидаемый счёт: {(prob.expected_score * 100).toFixed(1)}%</div>
+              </div>
+            )}
+            {projection && (
+              <div className="p-3 border rounded">
+                <div>Дельты при исходе: Win {projection.deltas.win} • Draw {projection.deltas.draw} • Loss {projection.deltas.loss}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Rating line chart based on history */}
+          {history && history.items && history.items.length > 0 && (
+            <div className="grid gap-4">
+              <h3 className="text-lg font-semibold">Динамика рейтинга</h3>
+              <div className="w-full h-64">
+                <ChartContainer
+                  id="rating-history"
+                  config={{ rating: { label: 'Рейтинг', color: '#06b6d4' } }}
+                  className="w-full h-full"
+                >
+                  {
+                    // prepare chart data: oldest -> newest
+                    (() => {
+                      const items = [...history.items].slice().reverse()
+                      const data = items.map((it: any, idx: number) => ({
+                        date: `#${idx + 1}`,
+                        rating: (it.my_rating_before ?? 0) + (it.my_rating_delta ?? 0),
+                      }))
+
+                      return (
+                        <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 6 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e6e6e6" />
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 11 }} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Line type="monotone" dataKey="rating" stroke="var(--color-rating)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                        </LineChart>
+                      )
+                    })()
+                  }
+                </ChartContainer>
+              </div>
+            </div>
+          )}
+          {history && history.items && (
+            <div className="grid gap-4">
+              <h3 className="text-lg font-semibold">История матчей</h3>
+              <div className="space-y-2">
+                {history.items.slice(0,10).map((it: any) => (
+                  <div key={it.match_id} className="p-3 border rounded flex items-center justify-between">
+                    <div className="text-sm">Против: {it.opponent_id ?? '—'}</div>
+                    <div className="text-sm">Рейтинг до: {it.my_rating_before} • Δ {it.my_rating_delta}</div>
+                    <div className="text-sm text-muted-foreground">{it.outcome || it.state}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
