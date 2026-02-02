@@ -28,6 +28,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+            </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col`}
             >
@@ -40,9 +43,9 @@ export default function RootLayout({
                     {/* ToastProvider добавляет шины для уведомлений */}
                     <ToastProvider>
                         <Header />
-                        <main className="p-5 flex-1">{children}</main>
+                        <main className="p-4 sm:p-5 flex-1">{children}</main>
                         <footer className="w-full border-t px-5 py-4 text-sm text-muted-foreground">
-                            <div className="max-w-6xl mx-auto flex justify-between items-center">
+                            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
                                 <div>© {new Date().getFullYear()} Предпроф</div>
                                 <div>
                                     <a href="/admin" className="underline hover:text-foreground">Админка</a>

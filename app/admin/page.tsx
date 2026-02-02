@@ -14,7 +14,10 @@ import {
   deleteTaskApiTasksTaskIdDelete,
   getTasksToJsonApiTasksExportGet,
   postTasksApiTasksUploadImportJsonPost,
+  getAllUsersApiUserGet,
+  getUserStatsApiStatsUsersUserIdGet
 } from '@/lib/client'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
@@ -157,128 +160,217 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <section className="p-4 border rounded">
-        <h3 className="text-xl mb-3">Создать / Редактировать</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>Заголовок</Label>
-            <Input value={selected?.title || ''} onChange={(e) => setSelected({ ...selected, title: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label>Предмет</Label>
-            <Input value={selected?.subject || ''} onChange={(e) => setSelected({ ...selected, subject: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label>Тема</Label>
-            <Input value={selected?.theme || ''} onChange={(e) => setSelected({ ...selected, theme: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label>Сложность</Label>
-            <Select value={selected?.difficulty || ''} onValueChange={(v) => setSelected({ ...selected, difficulty: v })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Выберите уровень" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="лёгкий">лёгкий</SelectItem>
-                <SelectItem value="средний">средний</SelectItem>
-                <SelectItem value="сложный">сложный</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="col-span-2 space-y-1">
-            <Label>Условие</Label>
-            <Textarea value={selected?.task_text || ''} onChange={(e) => setSelected({ ...selected, task_text: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label>Подсказка</Label>
-            <Input value={selected?.hint || ''} onChange={(e) => setSelected({ ...selected, hint: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label>Ответ</Label>
-            <Input value={selected?.answer || ''} onChange={(e) => setSelected({ ...selected, answer: e.target.value })} />
-          </div>
-        </div>
-        <div className="flex gap-2 mt-4">
-          <Button onClick={handleCreate} disabled={loading}>Создать</Button>
-          <Button onClick={handleUpdate} disabled={loading}>Сохранить</Button>
-          <Button variant="outline" onClick={() => setSelected(null)}>Сбросить</Button>
-        </div>
-      </section>
+      <Tabs defaultValue="tasks">
+        <TabsList>
+          <TabsTrigger value="tasks">Задачи</TabsTrigger>
+          <TabsTrigger value="users">Пользователи</TabsTrigger>
+        </TabsList>
 
-      <section className="p-4 border rounded">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl">Задачи</h2>
-          <div className="flex gap-2">
-            <Button onClick={handleExport}>Экспорт</Button>
-            <Input
-              id="jsonFileInput"
-              name="jsonFileInput"
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={(e) => setJsonFile(e.currentTarget.files?.[0] ?? null)}
-            />
-          <Button>
-            <label htmlFor="jsonFileInput" className="cursor-pointer">
-              {jsonFile ? jsonFile.name : 'Файл не выбран'}
-            </label>
-          </Button>
-            <Button onClick={handleImport}>Импорт</Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-6 gap-3 mb-4">
-          <div className="col-span-2 space-y-1">
-            <Label>По заголовку</Label>
-            <Input value={qTitle} onChange={(e) => setQTitle(e.target.value)} placeholder="Поиск по заголовку" />
-          </div>
-          <div className="col-span-2 space-y-1">
-            <Label>По условию</Label>
-            <Input value={qStatement} onChange={(e) => setQStatement(e.target.value)} placeholder="Поиск по условию" />
-          </div>
-          <div className="space-y-1">
-            <Label>Предмет</Label>
-            <Input value={qSubject} onChange={(e) => setQSubject(e.target.value)} placeholder="Предмет" />
-          </div>
-          <div className="space-y-1">
-            <Label>Тема</Label>
-            <Input value={qTheme} onChange={(e) => setQTheme(e.target.value)} placeholder="Тема" />
-          </div>
-        </div>
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="space-y-1">
-            <Label>Сложность</Label>
-            <Select value={qDifficulty} onValueChange={(v) => setQDifficulty(v)}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Все" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все</SelectItem>
-                <SelectItem value="лёгкий">лёгкий</SelectItem>
-                <SelectItem value="средний">средний</SelectItem>
-                <SelectItem value="сложный">сложный</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button variant="outline" onClick={() => { setQTitle(''); setQStatement(''); setQSubject(''); setQTheme(''); setQDifficulty('') }} className='w-fit'>Сбросить фильтры</Button>
-        </div>
-
-        <div className="space-y-3">
-          {filtered.map((t: any) => (
-            <div key={t.id} className="p-3 border rounded flex justify-between items-start">
-              <div>
-                <div className="font-medium">{t.title}</div>
-                <div className="text-sm text-muted-foreground">{t.subject} — {t.theme}</div>
-                <div className="text-sm text-muted-foreground">{t.task_text?.slice(0, 200)}</div>
+        <TabsContent value="tasks">
+          <section className="p-4 border rounded">
+            <h3 className="text-xl mb-3">Создать / Редактировать</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Заголовок</Label>
+                <Input value={selected?.title || ''} onChange={(e) => setSelected({ ...selected, title: e.target.value })} />
               </div>
+              <div className="space-y-1">
+                <Label>Предмет</Label>
+                <Input value={selected?.subject || ''} onChange={(e) => setSelected({ ...selected, subject: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Тема</Label>
+                <Input value={selected?.theme || ''} onChange={(e) => setSelected({ ...selected, theme: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Сложность</Label>
+                <Select value={selected?.difficulty || ''} onValueChange={(v) => setSelected({ ...selected, difficulty: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Выберите уровень" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="лёгкий">лёгкий</SelectItem>
+                    <SelectItem value="средний">средний</SelectItem>
+                    <SelectItem value="сложный">сложный</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-1">
+                <Label>Условие</Label>
+                <Textarea value={selected?.task_text || ''} onChange={(e) => setSelected({ ...selected, task_text: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Подсказка</Label>
+                <Input value={selected?.hint || ''} onChange={(e) => setSelected({ ...selected, hint: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Ответ</Label>
+                <Input value={selected?.answer || ''} onChange={(e) => setSelected({ ...selected, answer: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleCreate} disabled={loading}>Создать</Button>
+              <Button onClick={handleUpdate} disabled={loading}>Сохранить</Button>
+              <Button variant="outline" onClick={() => setSelected(null)}>Сбросить</Button>
+            </div>
+          </section>
+
+          <section className="p-4 border rounded">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl">Задачи</h2>
               <div className="flex gap-2">
-                <Button size="sm" onClick={() => setSelected(t)}>Редактировать</Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDelete(t.id)}>Удалить</Button>
+                <Button onClick={handleExport}>Экспорт</Button>
+                <Input
+                  id="jsonFileInput"
+                  name="jsonFileInput"
+                  type="file"
+                  accept="application/json"
+                  className="hidden"
+                  onChange={(e) => setJsonFile(e.currentTarget.files?.[0] ?? null)}
+                />
+              <Button>
+                <label htmlFor="jsonFileInput" className="cursor-pointer">
+                  {jsonFile ? jsonFile.name : 'Файл не выбран'}
+                </label>
+              </Button>
+                <Button onClick={handleImport}>Импорт</Button>
               </div>
+            </div>
+
+            <div className="grid grid-cols-6 gap-3 mb-4">
+              <div className="col-span-2 space-y-1">
+                <Label>По заголовку</Label>
+                <Input value={qTitle} onChange={(e) => setQTitle(e.target.value)} placeholder="Поиск по заголовку" />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <Label>По условию</Label>
+                <Input value={qStatement} onChange={(e) => setQStatement(e.target.value)} placeholder="Поиск по условию" />
+              </div>
+              <div className="space-y-1">
+                <Label>Предмет</Label>
+                <Input value={qSubject} onChange={(e) => setQSubject(e.target.value)} placeholder="Предмет" />
+              </div>
+              <div className="space-y-1">
+                <Label>Тема</Label>
+                <Input value={qTheme} onChange={(e) => setQTheme(e.target.value)} placeholder="Тема" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="space-y-1">
+                <Label>Сложность</Label>
+                <Select value={qDifficulty} onValueChange={(v) => setQDifficulty(v)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Все" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все</SelectItem>
+                    <SelectItem value="лёгкий">лёгкий</SelectItem>
+                    <SelectItem value="средний">средний</SelectItem>
+                    <SelectItem value="сложный">сложный</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant="outline" onClick={() => { setQTitle(''); setQStatement(''); setQSubject(''); setQTheme(''); setQDifficulty('') }} className='w-fit'>Сбросить фильтры</Button>
+            </div>
+
+            <div className="space-y-3">
+              {filtered.map((t: any) => (
+                <div key={t.id} className="p-3 border rounded flex justify-between items-start">
+                  <div>
+                    <div className="font-medium">{t.title}</div>
+                    <div className="text-sm text-muted-foreground">{t.subject} — {t.theme}</div>
+                    <div className="text-sm text-muted-foreground">{t.task_text?.slice(0, 200)}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => setSelected(t)}>Редактировать</Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(t.id)}>Удалить</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <section className="p-4 border rounded">
+            <UsersAdmin />
+          </section>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function UsersAdmin() {
+  const [users, setUsers] = useState<any[]>([])
+  const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const [userStats, setUserStats] = useState<any | null>(null)
+  const [loadingUsers, setLoadingUsers] = useState(false)
+
+  useEffect(() => { loadUsers() }, [])
+
+  const loadUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const resp: any = await getAllUsersApiUserGet()
+      const data = resp?.data || resp
+      setUsers(Array.isArray(data) ? data : [])
+    } catch (e) {
+      console.error('Failed to load users', e)
+    } finally { setLoadingUsers(false) }
+  }
+
+  const showStats = async (u: any) => {
+    setSelectedUser(u)
+    setUserStats(null)
+    try {
+      const resp: any = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: String(u.id) } })
+      const data = resp?.data || resp
+      setUserStats(data)
+    } catch (e) {
+      console.error('Failed to load user stats', e)
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-4 gap-4">
+      <div className="col-span-1">
+        <h3 className="text-lg font-semibold mb-2">Пользователи</h3>
+        <div className="space-y-2 max-h-[60vh] overflow-auto">
+          {loadingUsers && <div>Загрузка...</div>}
+          {users.map((u) => (
+            <div key={u.id} className="p-2 border rounded hover:bg-muted cursor-pointer" onClick={() => showStats(u)}>
+              <div className="font-medium">{u.first_name} {u.last_name}</div>
+              <div className="text-xs text-muted-foreground">{u.email}</div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
+      <div className="col-span-3">
+        {!selectedUser && <div className="text-muted-foreground">Выберите пользователя слева чтобы просмотреть статистику</div>}
+        {selectedUser && (
+          <div>
+            <h3 className="text-xl font-semibold">{selectedUser.first_name} {selectedUser.last_name}</h3>
+            <div className="text-sm text-muted-foreground mb-2">{selectedUser.email} • ID: {selectedUser.id}</div>
+            {userStats ? (
+              <div className="grid gap-4">
+                <div className="p-3 border rounded">
+                  <div className="text-sm text-muted-foreground">PVP</div>
+                  <div className="text-lg font-bold">{userStats.pvp?.wins ?? 0} / {userStats.pvp?.matches ?? 0} побед</div>
+                  <div className="text-sm text-muted-foreground">Побед: {userStats.pvp?.wins ?? 0} • Поражений: {userStats.pvp?.losses ?? 0} • Ничьих: {userStats.pvp?.draws ?? 0}</div>
+                </div>
+                <div className="p-3 border rounded">
+                  <div className="text-sm text-muted-foreground">Тренировка</div>
+                  <div className="text-lg font-bold">{userStats.training?.correct ?? 0} / {userStats.training?.attempts ?? 0}</div>
+                  <div className="text-sm text-muted-foreground">Точность: {userStats.training?.accuracy_pct ?? 0}%</div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground">Загрузка статистики...</div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -13,7 +13,4 @@ import type { ClientOptions as ClientOptions2 } from './types.gen';
  */
 export type CreateClientConfig<T extends ClientOptions = ClientOptions2> = (override?: Config<ClientOptions & T>) => Config<Required<ClientOptions> & T>;
 
-const DEFAULT_API_BASE = 'https://solaris.sherstd.ru'
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? DEFAULT_API_BASE
-
-export const client = createClient(createConfig<ClientOptions2>({ baseUrl: API_BASE }));
+export const client = createClient(createConfig<ClientOptions2>({ baseUrl: 'https://solaris.sherstd.ru' }));

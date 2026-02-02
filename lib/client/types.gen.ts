@@ -5,6 +5,16 @@ export type ClientOptions = {
 };
 
 /**
+ * Body_import_tasks_api_tasks_upload_import_csv_post
+ */
+export type BodyImportTasksApiTasksUploadImportCsvPost = {
+    /**
+     * File
+     */
+    file: Blob | File;
+};
+
+/**
  * Body_log_in_user_api_user_login_post
  */
 export type BodyLogInUserApiUserLoginPost = {
@@ -52,6 +62,10 @@ export type CheckAnswer = {
      * Answer
      */
     answer: string;
+    /**
+     * Elapsed Ms
+     */
+    elapsed_ms?: number | null;
 };
 
 /**
@@ -70,6 +84,308 @@ export type HttpValidationError = {
 };
 
 /**
+ * LeaderboardEntry
+ */
+export type LeaderboardEntry = {
+    /**
+     * Rank
+     */
+    rank: number;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Rating
+     */
+    rating: number;
+};
+
+/**
+ * LeaderboardResponse
+ */
+export type LeaderboardResponse = {
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Entries
+     */
+    entries: Array<LeaderboardEntry>;
+};
+
+/**
+ * MatchHistoryItem
+ */
+export type MatchHistoryItem = {
+    /**
+     * Match Id
+     */
+    match_id: string;
+    /**
+     * Opponent Id
+     */
+    opponent_id: string | null;
+    /**
+     * My Rating Before
+     */
+    my_rating_before: number;
+    /**
+     * My Rating Delta
+     */
+    my_rating_delta: number;
+    /**
+     * Outcome
+     */
+    outcome?: string | null;
+    /**
+     * State
+     */
+    state: string;
+    /**
+     * Started At
+     */
+    started_at?: string | null;
+    /**
+     * Finished At
+     */
+    finished_at?: string | null;
+};
+
+/**
+ * MatchHistoryResponse
+ */
+export type MatchHistoryResponse = {
+    /**
+     * Items
+     */
+    items: Array<MatchHistoryItem>;
+    /**
+     * Limit
+     */
+    limit: number;
+};
+
+/**
+ * ProbabilityResponse
+ */
+export type ProbabilityResponse = {
+    /**
+     * My Rating
+     */
+    my_rating: number;
+    /**
+     * Opponent Rating
+     */
+    opponent_rating: number;
+    /**
+     * Expected Score
+     */
+    expected_score: number;
+};
+
+/**
+ * ProjectionDeltas
+ */
+export type ProjectionDeltas = {
+    /**
+     * Win
+     */
+    win: number;
+    /**
+     * Draw
+     */
+    draw: number;
+    /**
+     * Loss
+     */
+    loss: number;
+};
+
+/**
+ * ProjectionResponse
+ */
+export type ProjectionResponse = {
+    /**
+     * My Rating
+     */
+    my_rating: number;
+    /**
+     * Opponent Rating
+     */
+    opponent_rating: number;
+    /**
+     * K Factor
+     */
+    k_factor?: number;
+    deltas: ProjectionDeltas;
+};
+
+/**
+ * PvpSummary
+ */
+export type PvpSummary = {
+    /**
+     * Matches
+     */
+    matches: number;
+    /**
+     * Wins
+     */
+    wins: number;
+    /**
+     * Losses
+     */
+    losses: number;
+    /**
+     * Draws
+     */
+    draws: number;
+    /**
+     * Win Rate Pct
+     */
+    win_rate_pct: number;
+};
+
+/**
+ * RatingSummary
+ */
+export type RatingSummary = {
+    user: UserPublic;
+    /**
+     * Rank
+     */
+    rank: number;
+    /**
+     * Percentile Pct
+     */
+    percentile_pct: number;
+    /**
+     * Total Players
+     */
+    total_players: number;
+    pvp: PvpSummary;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * StatsPvp
+ */
+export type StatsPvp = {
+    /**
+     * Matches
+     */
+    matches: number;
+    /**
+     * Wins
+     */
+    wins: number;
+    /**
+     * Losses
+     */
+    losses: number;
+    /**
+     * Draws
+     */
+    draws: number;
+    /**
+     * Win Rate Pct
+     */
+    win_rate_pct: number;
+};
+
+/**
+ * StatsResponse
+ */
+export type StatsResponse = {
+    user: UserPublic;
+    pvp: StatsPvp;
+    training: StatsTraining;
+    /**
+     * Updated At
+     */
+    updated_at?: string;
+};
+
+/**
+ * StatsTraining
+ */
+export type StatsTraining = {
+    /**
+     * Attempts
+     */
+    attempts: number;
+    /**
+     * Correct
+     */
+    correct: number;
+    /**
+     * Incorrect
+     */
+    incorrect: number;
+    /**
+     * Accuracy Pct
+     */
+    accuracy_pct: number;
+    /**
+     * Avg Time Ms
+     */
+    avg_time_ms?: number | null;
+    /**
+     * By Theme
+     */
+    by_theme: {
+        [key: string]: StatsTrainingByThemeItem;
+    };
+};
+
+/**
+ * StatsTrainingByThemeItem
+ */
+export type StatsTrainingByThemeItem = {
+    /**
+     * Attempts
+     */
+    attempts: number;
+    /**
+     * Correct
+     */
+    correct: number;
+    /**
+     * Incorrect
+     */
+    incorrect: number;
+    /**
+     * Accuracy Pct
+     */
+    accuracy_pct: number;
+    /**
+     * Avg Time Ms
+     */
+    avg_time_ms?: number | null;
+};
+
+/**
  * TaskSchema
  */
 export type TaskSchema = {
@@ -77,6 +393,38 @@ export type TaskSchema = {
      * Id
      */
     id: string;
+    /**
+     * Subject
+     */
+    subject: string;
+    theme: Theme;
+    difficulty: Difficulty;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Task Text
+     */
+    task_text: string;
+    /**
+     * Hint
+     */
+    hint?: string | null;
+    /**
+     * Answer
+     */
+    answer?: string | null;
+    /**
+     * Is Published
+     */
+    is_published?: boolean;
+};
+
+/**
+ * TaskSchemaRequest
+ */
+export type TaskSchemaRequest = {
     /**
      * Subject
      */
@@ -125,6 +473,16 @@ export type Token = {
 };
 
 /**
+ * TokenRequest
+ */
+export type TokenRequest = {
+    /**
+     * Token
+     */
+    token: string;
+};
+
+/**
  * UserLogIn
  */
 export type UserLogIn = {
@@ -132,6 +490,36 @@ export type UserLogIn = {
      * User Token
      */
     user_token: string;
+};
+
+/**
+ * UserPublic
+ */
+export type UserPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string;
+    /**
+     * Elo Rating
+     */
+    elo_rating: number;
+    /**
+     * Is Blocked
+     */
+    is_blocked: boolean;
 };
 
 /**
@@ -319,13 +707,17 @@ export type GetAllUsersApiUserGetResponses = {
 export type GetAllUsersApiUserGetResponse = GetAllUsersApiUserGetResponses[keyof GetAllUsersApiUserGetResponses];
 
 export type PostTasksApiTasksUploadPostData = {
-    body: TaskSchema;
+    body: TaskSchemaRequest;
     path?: never;
     query?: never;
     url: '/api/tasks/upload';
 };
 
 export type PostTasksApiTasksUploadPostErrors = {
+    /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
     /**
      * Validation Error
      */
@@ -352,6 +744,10 @@ export type PostTasksApiTasksUploadImportJsonPostData = {
 
 export type PostTasksApiTasksUploadImportJsonPostErrors = {
     /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -360,6 +756,33 @@ export type PostTasksApiTasksUploadImportJsonPostErrors = {
 export type PostTasksApiTasksUploadImportJsonPostError = PostTasksApiTasksUploadImportJsonPostErrors[keyof PostTasksApiTasksUploadImportJsonPostErrors];
 
 export type PostTasksApiTasksUploadImportJsonPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ImportTasksApiTasksUploadImportCsvPostData = {
+    body: BodyImportTasksApiTasksUploadImportCsvPost;
+    path?: never;
+    query?: never;
+    url: '/api/tasks/upload/import/csv';
+};
+
+export type ImportTasksApiTasksUploadImportCsvPostErrors = {
+    /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ImportTasksApiTasksUploadImportCsvPostError = ImportTasksApiTasksUploadImportCsvPostErrors[keyof ImportTasksApiTasksUploadImportCsvPostErrors];
+
+export type ImportTasksApiTasksUploadImportCsvPostResponses = {
     /**
      * Successful Response
      */
@@ -408,6 +831,10 @@ export type DeleteTaskApiTasksTaskIdDeleteData = {
 
 export type DeleteTaskApiTasksTaskIdDeleteErrors = {
     /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -435,6 +862,10 @@ export type UpdateTaskApiTasksTaskIdPatchData = {
 };
 
 export type UpdateTaskApiTasksTaskIdPatchErrors = {
+    /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
     /**
      * Validation Error
      */
@@ -499,7 +930,35 @@ export type GetTasksToJsonApiTasksExportGetData = {
     url: '/api/tasks/export';
 };
 
+export type GetTasksToJsonApiTasksExportGetErrors = {
+    /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
+};
+
 export type GetTasksToJsonApiTasksExportGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetTasksToCsvApiTasksExportCsvGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tasks/export/csv';
+};
+
+export type GetTasksToCsvApiTasksExportCsvGetErrors = {
+    /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
+};
+
+export type GetTasksToCsvApiTasksExportCsvGetResponses = {
     /**
      * Successful Response
      */
@@ -570,6 +1029,29 @@ export type GetLeaderboardApiPvpRatingLeaderboardGetErrors = {
 export type GetLeaderboardApiPvpRatingLeaderboardGetError = GetLeaderboardApiPvpRatingLeaderboardGetErrors[keyof GetLeaderboardApiPvpRatingLeaderboardGetErrors];
 
 export type GetLeaderboardApiPvpRatingLeaderboardGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ValidateTokenApiAuthValidateTokenPostData = {
+    body: TokenRequest;
+    path?: never;
+    query?: never;
+    url: '/api/auth/validate-token';
+};
+
+export type ValidateTokenApiAuthValidateTokenPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ValidateTokenApiAuthValidateTokenPostError = ValidateTokenApiAuthValidateTokenPostErrors[keyof ValidateTokenApiAuthValidateTokenPostErrors];
+
+export type ValidateTokenApiAuthValidateTokenPostResponses = {
     /**
      * Successful Response
      */
@@ -679,3 +1161,243 @@ export type CheckAnswerApiTrainingTaskTaskIdCheckPostResponses = {
      */
     200: unknown;
 };
+
+export type GetMyStatsApiStatsMeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/stats/me';
+};
+
+export type GetMyStatsApiStatsMeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StatsResponse;
+};
+
+export type GetMyStatsApiStatsMeGetResponse = GetMyStatsApiStatsMeGetResponses[keyof GetMyStatsApiStatsMeGetResponses];
+
+export type GetUserStatsApiStatsUsersUserIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         *
+         * ID пользователя
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/stats/users/{user_id}';
+};
+
+export type GetUserStatsApiStatsUsersUserIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUserStatsApiStatsUsersUserIdGetError = GetUserStatsApiStatsUsersUserIdGetErrors[keyof GetUserStatsApiStatsUsersUserIdGetErrors];
+
+export type GetUserStatsApiStatsUsersUserIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: StatsResponse;
+};
+
+export type GetUserStatsApiStatsUsersUserIdGetResponse = GetUserStatsApiStatsUsersUserIdGetResponses[keyof GetUserStatsApiStatsUsersUserIdGetResponses];
+
+export type GetMyRatingApiRatingMeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/rating/me';
+};
+
+export type GetMyRatingApiRatingMeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: RatingSummary;
+};
+
+export type GetMyRatingApiRatingMeGetResponse = GetMyRatingApiRatingMeGetResponses[keyof GetMyRatingApiRatingMeGetResponses];
+
+export type GetUserRatingApiRatingUsersUserIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         *
+         * ID пользователя
+         */
+        user_id: string;
+    };
+    query?: never;
+    url: '/api/rating/users/{user_id}';
+};
+
+export type GetUserRatingApiRatingUsersUserIdGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetUserRatingApiRatingUsersUserIdGetError = GetUserRatingApiRatingUsersUserIdGetErrors[keyof GetUserRatingApiRatingUsersUserIdGetErrors];
+
+export type GetUserRatingApiRatingUsersUserIdGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: RatingSummary;
+};
+
+export type GetUserRatingApiRatingUsersUserIdGetResponse = GetUserRatingApiRatingUsersUserIdGetResponses[keyof GetUserRatingApiRatingUsersUserIdGetResponses];
+
+export type GetLeaderboardApiRatingLeaderboardGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/rating/leaderboard';
+};
+
+export type GetLeaderboardApiRatingLeaderboardGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetLeaderboardApiRatingLeaderboardGetError = GetLeaderboardApiRatingLeaderboardGetErrors[keyof GetLeaderboardApiRatingLeaderboardGetErrors];
+
+export type GetLeaderboardApiRatingLeaderboardGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: LeaderboardResponse;
+};
+
+export type GetLeaderboardApiRatingLeaderboardGetResponse = GetLeaderboardApiRatingLeaderboardGetResponses[keyof GetLeaderboardApiRatingLeaderboardGetResponses];
+
+export type GetWinProbabilityApiRatingProbabilityGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Opponent Id
+         *
+         * ID соперника
+         */
+        opponent_id?: string | null;
+        /**
+         * Opponent Rating
+         *
+         * Рейтинг соперника
+         */
+        opponent_rating?: number | null;
+    };
+    url: '/api/rating/probability';
+};
+
+export type GetWinProbabilityApiRatingProbabilityGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWinProbabilityApiRatingProbabilityGetError = GetWinProbabilityApiRatingProbabilityGetErrors[keyof GetWinProbabilityApiRatingProbabilityGetErrors];
+
+export type GetWinProbabilityApiRatingProbabilityGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProbabilityResponse;
+};
+
+export type GetWinProbabilityApiRatingProbabilityGetResponse = GetWinProbabilityApiRatingProbabilityGetResponses[keyof GetWinProbabilityApiRatingProbabilityGetResponses];
+
+export type GetRatingProjectionApiRatingProjectionGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Opponent Id
+         *
+         * ID соперника
+         */
+        opponent_id?: string | null;
+        /**
+         * Opponent Rating
+         *
+         * Рейтинг соперника
+         */
+        opponent_rating?: number | null;
+        /**
+         * K Factor
+         */
+        k_factor?: number;
+    };
+    url: '/api/rating/projection';
+};
+
+export type GetRatingProjectionApiRatingProjectionGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetRatingProjectionApiRatingProjectionGetError = GetRatingProjectionApiRatingProjectionGetErrors[keyof GetRatingProjectionApiRatingProjectionGetErrors];
+
+export type GetRatingProjectionApiRatingProjectionGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectionResponse;
+};
+
+export type GetRatingProjectionApiRatingProjectionGetResponse = GetRatingProjectionApiRatingProjectionGetResponses[keyof GetRatingProjectionApiRatingProjectionGetResponses];
+
+export type GetMyRatingHistoryApiRatingHistoryMeGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/rating/history/me';
+};
+
+export type GetMyRatingHistoryApiRatingHistoryMeGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetMyRatingHistoryApiRatingHistoryMeGetError = GetMyRatingHistoryApiRatingHistoryMeGetErrors[keyof GetMyRatingHistoryApiRatingHistoryMeGetErrors];
+
+export type GetMyRatingHistoryApiRatingHistoryMeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: MatchHistoryResponse;
+};
+
+export type GetMyRatingHistoryApiRatingHistoryMeGetResponse = GetMyRatingHistoryApiRatingHistoryMeGetResponses[keyof GetMyRatingHistoryApiRatingHistoryMeGetResponses];

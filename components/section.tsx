@@ -73,7 +73,7 @@ export function Section({ title, tasks }: { title: string, tasks: ITask[] }) {
     return (
         <div className="flex-col">
             <div className="text-xl font-medium">{title}</div>
-            <div className="grid grid-cols-5 gap-5 w-full my-5 min-h-62.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 w-full my-5 min-h-62.5">
                 {currentTasks.map((task, index) => (
                     <Task task={task} key={index} />
                 ))}
