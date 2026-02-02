@@ -178,7 +178,7 @@ export default function PvpPage() {
       case 'task': {
         // Server sends: task_id, title, task_text, theme, difficulty
         // Guard: ignore duplicate task messages (same task_id)
-        const incomingId = msg.task_id ?? msg.task?.task_id ?? msg.task?.id
+        const incomingId = msg.task?.id
         // Ignore duplicate task messages if we've already processed this task id
         if (incomingId && lastTaskIdRef.current === incomingId) {
           console.debug('Duplicate task ignored', incomingId)

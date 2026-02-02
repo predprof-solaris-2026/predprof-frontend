@@ -136,7 +136,7 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                             // reset previous training progress, save new training list and navigate to first task
                             try { localStorage.setItem('trainingProgress', JSON.stringify({})) } catch {}
                             try { localStorage.setItem('trainingList', JSON.stringify(data)) } catch {}
-                            const firstId = data[0]?.id || data[0]?.task_id
+                            const firstId = data[0]?.id;
                             if (firstId) router.push(`/task/${firstId}`)
                         } catch (err: any) {
                             console.error(err)

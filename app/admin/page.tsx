@@ -337,7 +337,7 @@ function UsersAdmin() {
     setSelectedUser(u)
     setUserStats(null)
     try {
-      const resp: any = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: String(u.id) }, auth: adminToken })
+      const resp: any = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: String(u.id) }, auth: adminToken ?? undefined })
       const data = resp?.data || resp
       setUserStats(data)
     } catch (e) {

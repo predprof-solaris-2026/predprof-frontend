@@ -48,11 +48,12 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                 const correct = Boolean(result?.correct)
                 setIsCorrect(correct)
                 setLastMessage(result?.message ?? null)
-                if (result?.answer) setCorrectAnswer(result.answer)
+                // сервер возвращает поле `message`, а не `answer` в CheckAnswerResult;
+                // корректный ответ сейчас не доступен отдельно, поэтому не пытаемся читать `result.answer`
 
                 // update training progress for current task
                 try {
-                    const id = task?.id ?? task?.task_id
+                    const id = task?.id;
                     if (id) {
                         const idStr = String(id)
                         const next = { ...trainingProgress }
@@ -96,10 +97,10 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
             >
                 {trainingList && trainingList.length > 0 ? (
                     trainingList.map((t, i) => {
-                        const id = t.id ?? t.task_id
+                        const id = t.id;
                         const idStr = id ? String(id) : undefined
                         const status = idStr ? trainingProgress[idStr] : undefined
-                        const isCurrent = String(task?.id ?? task?.task_id) === idStr
+                        const isCurrent = String(task?.id) === idStr
                         let cls = ''
                         if (status === 'correct') cls = 'bg-green-50 text-green-800 border border-green-100'
                         if (status === 'wrong') cls = 'bg-red-50 text-red-800 border border-red-100'
