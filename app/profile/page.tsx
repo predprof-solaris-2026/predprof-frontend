@@ -60,9 +60,10 @@ export default function ProfilePage() {
       if (!id || id === "undefined") return
       setLoading(true)
       try {
-        const options: Record<string, unknown> = { path: { user_id: id } }
-        if (token) (options as Record<string, unknown>).headers = { Authorization: `Bearer ${token}` }
-        const resp: unknown = await getUserByIdApiUserUserIdGet(options)
+        const reqOptions = token
+          ? { path: { user_id: id }, headers: { Authorization: `Bearer ${token}` } }
+          : { path: { user_id: id } }
+        const resp: unknown = await getUserByIdApiUserUserIdGet(reqOptions)
         const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
         if (mounted && data && ( (data as Record<string, unknown>).id || (data as Record<string, unknown>).email)) {
           setUser(data as User)
