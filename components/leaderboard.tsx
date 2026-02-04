@@ -28,15 +28,25 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    let mounted = true
-    setLoading(true)
-    getLeaderboardApiPvpRatingLeaderboardGet()
-      .then((resp: any) => {
-        const data = (resp as any)?.data || []
+    let mounted = true;
+    setLoading(true);
+    (async () => {
+      try {
+        const resp: unknown = await getLeaderboardApiPvpRatingLeaderboardGet()
+        let data: unknown = []
+        if (resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>)) {
+          data = (resp as Record<string, unknown>).data
+        } else {
+          data = resp
+        }
         if (mounted) setItems(Array.isArray(data) ? data : [])
-      })
-      .catch((e) => console.error(e))
-      .finally(() => mounted && setLoading(false))
+      } catch (e) {
+         
+        console.error(e)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    })()
     return () => {
       mounted = false
     }
@@ -56,7 +66,7 @@ export default function Leaderboard() {
               <div className="flex items-start sm:items-center gap-3">
                 <div className="text-sm font-semibold text-muted-foreground mr-2">#{it.rank}</div>
                 <div className="relative">
-                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-linear-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm sm:text-base">
                     {initials(it.name)}
                   </div>
                   {it.rank <= 3 && (

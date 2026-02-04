@@ -39,8 +39,8 @@ export default function PvpPage() {
   const [round, setRound] = useState<number>(0)
   const [answer, setAnswer] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [matchResult, setMatchResult] = useState<any | null>(null)
-  const [lastAnswerReceived, setLastAnswerReceived] = useState<any | null>(null)
+  const [matchResult, setMatchResult] = useState<Record<string, unknown> | null>(null)
+  const [lastAnswerReceived, setLastAnswerReceived] = useState<Record<string, unknown> | null>(null)
   const [playerNames, setPlayerNames] = useState<Record<string, string>>({})
   const [waitingForNext, setWaitingForNext] = useState(false)
   const answerWatchdogRef = useRef<number | null>(null)
@@ -51,13 +51,13 @@ export default function PvpPage() {
   const closeWebSocket = (sendDisconnect = true) => {
     try {
       if (sendDisconnect) {
-        try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) { /* ignore */ }
+        try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) {}
       }
-      try { wsRef.current?.close() } catch (e) { /* ignore */ }
+      try { wsRef.current?.close() } catch (e) {}
     } catch (e) {
       console.error('Error while closing websocket', e)
     } finally {
-      try { wsRef.current = null } catch (e) { /* ignore */ }
+      try { wsRef.current = null } catch (e) {}
     }
   }
   const [loading, setLoading] = useState(false)
@@ -66,8 +66,7 @@ export default function PvpPage() {
 
   useEffect(() => {
     return () => {
-      try { closeWebSocket(false) } catch (e) { /* ignore */ }
-      // clear any timers on unmount
+      try { closeWebSocket(false) } catch (e) {}
       clearAnswerWatchdog()
     }
   }, [])
@@ -96,7 +95,6 @@ export default function PvpPage() {
 
     ws.onopen = () => {
       setQueueMessage('Соединение установлено')
-      // send bearer token according to protocol
       ws.send(JSON.stringify({ type: 'bearer', token }))
     }
 
@@ -169,147 +167,191 @@ export default function PvpPage() {
     setWaitingForNext(false)
   }
 
-  const handleMessage = (msg: any) => {
-    switch (msg.type) {
-      case 'state_update': {
-        // { type: 'state_update', round, rounds_total, p1, p2 }
+  const handleMessage = (msg: unknown) => {
+    const m = typeof msg === "object" && msg !== null ? (msg as Record<string, unknown>) : {};
+    const type = String(m.type ?? "");
+    switch (type) {
+      case "state_update": {
         try {
-          const p1 = msg.p1 || {}
-          const p2 = msg.p2 || {}
-          const myId = user?.id
-          const me = p1.user_id === myId ? p1 : p2.user_id === myId ? p2 : null
-          const opp = me === p1 ? p2 : me === p2 ? p1 : null
+          const p1 = (m.p1 as Record<string, unknown> | undefined) ?? {};
+          const p2 = (m.p2 as Record<string, unknown> | undefined) ?? {};
+          const myId = user?.id;
+          const me = (String(p1.user_id ?? "") === myId ? p1 : String(p2.user_id ?? "") === myId ? p2 : null) as
+            | Record<string, unknown>
+            | null;
+          const opp = me === p1 ? p2 : me === p2 ? p1 : null;
           if (me && opp) {
-            // timer functionality removed
+            // no-op
           }
-        } catch (e) { console.error('state_update handling failed', e) }
-        break
-      }
-      case 'queued':
-        setStatus('queued')
-        setQueueMessage(msg.message || 'Поиск противника...')
-        if (msg.queue_size != null) setQueueSize(msg.queue_size)
-        break
-      case 'unauthorized':
-        // server indicates auth failure for websocket — clear auth and redirect to login
-        try { clearTokenCookie() } catch {}
-        try { (useUserStore as any).getState().clear() } catch {}
-        try { router.push('/login') } catch {}
-        try { closeWebSocket() } catch (e) { /* ignore */ }
-        break
-      case 'canceled':
-        setStatus('idle')
-        setQueueMessage(null)
-        setQueueSize(null)
-        break
-      case 'task': {
-        // Server sends: task_id, title, task_text, theme, difficulty
-        // Guard: ignore duplicate task messages (same task_id)
-        const incomingId = msg.task?.id
-        // Ignore duplicate task messages if we've already processed this task id
-        if (incomingId && lastTaskIdRef.current === incomingId) {
-          console.debug('Duplicate task ignored', incomingId)
-          break
+        } catch (e) {
+           
+          console.error("state_update handling failed", e);
         }
-        setStatus('in_match')
-        // There are 4 rounds (server sends 0..3 or similar); allow up to 4
-        setRound((r) => Math.min(4, r + 1))
-        const newTask = { id: incomingId ?? (msg.task?.id ?? ''), title: msg.title ?? msg.task?.title, task_text: msg.task_text ?? msg.task?.task_text };
-        setTask(newTask)
-        // clear last-submitted answer tracking on new task
-        lastSentAnswerRef.current = null
-        lastSentTaskIdRef.current = null
-        autoResentRef.current = false
-        if (newTask?.id) lastTaskIdRef.current = newTask.id
-        setMatchResult(null)
-        setLastAnswerReceived(null)
-        setAnswer('')
-        // a new task arrived => clear any waiting watchdog
-        clearAnswerWatchdog()
-        break
+        break;
       }
-      case 'answer_received':
-        // { type: 'answer_received', submission_id, counted, message }
-        setLastAnswerReceived(msg)
-        // start watchdog in case server doesn't immediately send next task or match_result
-        startAnswerWatchdog()
-        break
-      case 'match_result':
-        // Guard: if server returned a match where both players are the same user, treat as error
+      case "queued": {
+        setStatus("queued");
+        setQueueMessage(String(m.message ?? "Поиск противника..."));
+        if (m.queue_size != null) setQueueSize(Number(m.queue_size as number));
+        break;
+      }
+      case "unauthorized": {
         try {
-          const p1id = msg?.p1?.user_id
-          const p2id = msg?.p2?.user_id
+          clearTokenCookie();
+        } catch {}
+        try {
+          // Some stores expose getState; apply defensively
+          // @ts-ignore
+          if (typeof useUserStore.getState === "function") useUserStore.getState().clear();
+        } catch {}
+        try {
+          router.push("/login");
+        } catch {}
+        try {
+          closeWebSocket();
+        } catch (e) {
+          // ignore
+        }
+        break;
+      }
+      case "canceled": {
+        setStatus("idle");
+        setQueueMessage(null);
+        setQueueSize(null);
+        break;
+      }
+      case "task": {
+        const taskObj = (m.task as Record<string, unknown> | undefined) ?? {};
+        const incomingId = String(taskObj.id ?? "");
+        if (incomingId && lastTaskIdRef.current === incomingId) {
+           
+          console.debug("Duplicate task ignored", incomingId);
+          break;
+        }
+        setStatus("in_match");
+        setRound((r) => Math.min(4, r + 1));
+        const newTask: PvPTask = {
+          id: incomingId || String(taskObj.id ?? ""),
+          title: String(m.title ?? taskObj.title ?? "Боевая задача"),
+          task_text: String(m.task_text ?? taskObj.task_text ?? ""),
+        };
+        setTask(newTask);
+        lastSentAnswerRef.current = null;
+        lastSentTaskIdRef.current = null;
+        autoResentRef.current = false;
+        if (newTask?.id) lastTaskIdRef.current = newTask.id;
+        setMatchResult(null);
+        setLastAnswerReceived(null);
+        setAnswer("");
+        clearAnswerWatchdog();
+        break;
+      }
+      case "answer_received": {
+        setLastAnswerReceived(m as Record<string, unknown>);
+        startAnswerWatchdog();
+        break;
+      }
+      case "match_result": {
+        try {
+          const p1id = String(((m.p1 as Record<string, unknown> | undefined)?.user_id) ?? "");
+          const p2id = String(((m.p2 as Record<string, unknown> | undefined)?.user_id) ?? "");
           if (p1id && p2id && p1id === p2id) {
-            console.error('Server paired user with themself', p1id)
-            toast({ title: 'Ошибка матча', description: 'Сервер подобрал матч с самим собой — попытка отменена', variant: 'destructive' })
-            // disconnect and reset
-            try { closeWebSocket() } catch (e) {}
-            setStatus('idle')
-            setRound(0)
-            setTask(null)
-            lastTaskIdRef.current = null
-            clearAnswerWatchdog()
-            break
+             
+            console.error("Server paired user with themself", p1id);
+            toast({ title: "Ошибка матча", description: "Сервер подобрал матч с самим собой — попытка отменена", variant: "destructive" });
+            try {
+              closeWebSocket();
+            } catch {}
+            setStatus("idle");
+            setRound(0);
+            setTask(null);
+            lastTaskIdRef.current = null;
+            clearAnswerWatchdog();
+            break;
           }
-        } catch (e) { console.error(e) }
-        setMatchResult(msg)
-        setStatus('idle')
-        setRound(0)
+        } catch (e) {
+           
+          console.error(e);
+        }
+        setMatchResult(m as Record<string, unknown>);
+        setStatus("idle");
+        setRound(0);
         try {
-          // notify server we disconnect after match end
-          wsRef.current?.send(JSON.stringify({ type: 'disconnect' }))
-        } catch (e) { console.error(e) }
-        // clear last processed task id
-        lastTaskIdRef.current = null
-        // fetch player names for display
+          wsRef.current?.send(JSON.stringify({ type: "disconnect" }));
+        } catch (e) {
+           
+          console.error(e);
+        }
+        lastTaskIdRef.current = null;
         try {
-          const p1id = msg?.p1?.user_id
-          const p2id = msg?.p2?.user_id
-          if (p1id) fetchUserName(p1id)
-          if (p2id) fetchUserName(p2id)
-        } catch (e) { console.error(e) }
-        // done with this match — clear watchdog
-        clearAnswerWatchdog()
-        // clear last-submitted answer tracking on match end
-        lastSentAnswerRef.current = null
-        lastSentTaskIdRef.current = null
-        autoResentRef.current = false
-          try { closeWebSocket() } catch (e) { console.error(e) }
-        break
-      case 'finished':
-        // Guard: avoid self-match
+          const p1id = String(((m.p1 as Record<string, unknown> | undefined)?.user_id) ?? "");
+          const p2id = String(((m.p2 as Record<string, unknown> | undefined)?.user_id) ?? "");
+          if (p1id) fetchUserName(p1id);
+          if (p2id) fetchUserName(p2id);
+        } catch (e) {
+           
+          console.error(e);
+        }
+        clearAnswerWatchdog();
+        lastSentAnswerRef.current = null;
+        lastSentTaskIdRef.current = null;
+        autoResentRef.current = false;
         try {
-          const p1id = msg?.p1?.user_id
-          const p2id = msg?.p2?.user_id
+          closeWebSocket();
+        } catch (e) {
+           
+          console.error(e);
+        }
+        break;
+      }
+      case "finished": {
+        try {
+          const p1id = String(((m.p1 as Record<string, unknown> | undefined)?.user_id) ?? "");
+          const p2id = String(((m.p2 as Record<string, unknown> | undefined)?.user_id) ?? "");
           if (p1id && p2id && p1id === p2id) {
-            console.error('Server finished match with same user', p1id)
-            toast({ title: 'Ошибка матча', description: 'Сервер завершил матч с самим собой — попытка отменена', variant: 'destructive' })
-            try { closeWebSocket() } catch (e) {}
-            setStatus('idle')
-            setRound(0)
-            setTask(null)
-            lastTaskIdRef.current = null
-            clearAnswerWatchdog()
-            break
+             
+            console.error("Server finished match with same user", p1id);
+            toast({ title: "Ошибка матча", description: "Сервер завершил матч с самим собой — попытка отменена", variant: "destructive" });
+            try {
+              closeWebSocket();
+            } catch {}
+            setStatus("idle");
+            setRound(0);
+            setTask(null);
+            lastTaskIdRef.current = null;
+            clearAnswerWatchdog();
+            break;
           }
-        } catch (e) { console.error(e) }
-        setMatchResult(msg)
-        setStatus('idle')
-        setRound(0)
+        } catch (e) {
+           
+          console.error(e);
+        }
+        setMatchResult(m as Record<string, unknown>);
+        setStatus("idle");
+        setRound(0);
         try {
-          const p1id = msg?.p1?.user_id
-          const p2id = msg?.p2?.user_id
-          if (p1id) fetchUserName(p1id)
-          if (p2id) fetchUserName(p2id)
-        } catch (e) { console.error(e) }
-        clearAnswerWatchdog()
-        lastSentAnswerRef.current = null
-        lastSentTaskIdRef.current = null
-        autoResentRef.current = false
-          try { closeWebSocket() } catch (e) { console.error(e) }
-            break
+          const p1id = String(((m.p1 as Record<string, unknown> | undefined)?.user_id) ?? "");
+          const p2id = String(((m.p2 as Record<string, unknown> | undefined)?.user_id) ?? "");
+          if (p1id) fetchUserName(p1id);
+          if (p2id) fetchUserName(p2id);
+        } catch (e) {
+           
+          console.error(e);
+        }
+        clearAnswerWatchdog();
+        lastSentAnswerRef.current = null;
+        lastSentTaskIdRef.current = null;
+        autoResentRef.current = false;
+        try {
+          closeWebSocket();
+        } catch (e) {
+           
+          console.error(e);
+        }
+        break;
+      }
       default:
-        break
+        break;
     }
   }
 
@@ -502,12 +544,12 @@ export default function PvpPage() {
             {matchResult && status === 'idle' && (
               <div className={cn(
                 "p-6 rounded-xl border-2 flex flex-col items-center text-center space-y-4 transition-all animate-in slide-in-from-bottom-4",
-                matchResult.outcome?.includes('win') ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900" :
+                String(matchResult.outcome ?? '').includes('win') ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900" :
                 matchResult.outcome === 'draw' ? "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900" :
                 "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900"
               )}>
                 <div className="flex items-center gap-4">
-                  {matchResult.outcome?.includes('win') ? (
+                  {String(matchResult.outcome ?? '').includes('win') ? (
                     <div className="h-16 w-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
                       <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
                     </div>
@@ -527,18 +569,23 @@ export default function PvpPage() {
                 </div>
 
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {[matchResult.p1, matchResult.p2].map((p: any, idx: number) => {
-                    const isMe = user?.id && user.id === p.user_id
+                  {([matchResult?.p1 as Record<string, unknown> | undefined, matchResult?.p2 as Record<string, unknown> | undefined]).map((p, idx) => {
+                    const userId = String(p?.user_id ?? "");
+                    const isMe = user?.id && user.id === userId;
+                    const displayName = playerNames[userId] ?? ((p?.first_name ? `${String(p.first_name)} ${String(p.last_name ?? "")}`.trim() : userId));
+                    const oldRating = String(p?.old_rating ?? "") || "—";
+                    const newRating = String(p?.new_rating ?? "") || "—";
+                    const delta = Number(p?.delta ?? 0);
                     return (
-                      <div key={idx} className={cn("p-4 rounded-lg border", isMe ? 'border-primary/60 bg-primary/5' : 'border-muted/30 bg-transparent')}>
+                      <div key={userId || idx} className={cn("p-4 rounded-lg border", isMe ? "border-primary/60 bg-primary/5" : "border-muted/30 bg-transparent")}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-sm text-muted-foreground">{isMe ? 'Вы' : `Игрок ${idx + 1}`}</div>
-                            <div className="font-medium">{playerNames[p.user_id] ?? `${p.first_name ? `${p.first_name} ${p.last_name ?? ''}`.trim() : p.user_id}`}</div>
+                            <div className="text-sm text-muted-foreground">{isMe ? "Вы" : `Игрок ${idx + 1}`}</div>
+                            <div className="font-medium">{displayName}</div>
                           </div>
                           <div className="text-right">
                             <div className="text-sm">Рейтинг</div>
-                            <div className="font-semibold">{p.old_rating} → {p.new_rating} <span className={cn('ml-2', p.delta > 0 ? 'text-green-600' : 'text-red-600')}>({p.delta > 0 ? '+' : ''}{p.delta})</span></div>
+                            <div className="font-semibold">{oldRating} → {newRating} <span className={cn("ml-2", delta > 0 ? "text-green-600" : "text-red-600")}>({delta > 0 ? "+" : ""}{delta})</span></div>
                           </div>
                         </div>
                       </div>

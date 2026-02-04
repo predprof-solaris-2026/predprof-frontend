@@ -14,7 +14,7 @@ import Link from "next/link";
 
 export function Task({ task }: { task: Task }) {
     return (
-        <Link href={`/task/${task.id}`}>
+        <Link href={`/task/${task.id}?ref=card`}>
             <Card className="w-full flex flex-col justify-between cursor-pointer hover:shadow-md transition-shadow min-h-62.5">
                 <div>
                     <CardHeader>

@@ -74,6 +74,26 @@ export type CheckAnswer = {
 export type Difficulty = 'лёгкий' | 'средний' | 'сложный';
 
 /**
+ * GenerateTaskRequest
+ */
+export type GenerateTaskRequest = {
+    /**
+     * Subject
+     */
+    subject: string;
+    theme: Theme;
+    difficulty: Difficulty;
+    /**
+     * Temperature
+     */
+    temperature?: number | null;
+    /**
+     * Max Tokens
+     */
+    max_tokens?: number | null;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -139,7 +159,7 @@ export type MatchHistoryItem = {
      * Match Id
      */
     match_id: string;
-    opponent: UserPublic;
+    opponent?: UserPublic | null;
     /**
      * My Rating Before
      */
@@ -962,6 +982,35 @@ export type GetTasksToCsvApiTasksExportCsvGetResponses = {
     200: unknown;
 };
 
+export type GenerateTaskViaGigachatApiTasksGeneratePostData = {
+    body: GenerateTaskRequest;
+    path?: never;
+    query?: never;
+    url: '/api/tasks/generate';
+};
+
+export type GenerateTaskViaGigachatApiTasksGeneratePostErrors = {
+    /**
+     * Forbidden - You are not admin
+     */
+    403: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GenerateTaskViaGigachatApiTasksGeneratePostError = GenerateTaskViaGigachatApiTasksGeneratePostErrors[keyof GenerateTaskViaGigachatApiTasksGeneratePostErrors];
+
+export type GenerateTaskViaGigachatApiTasksGeneratePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: TaskSchema;
+};
+
+export type GenerateTaskViaGigachatApiTasksGeneratePostResponse = GenerateTaskViaGigachatApiTasksGeneratePostResponses[keyof GenerateTaskViaGigachatApiTasksGeneratePostResponses];
+
 export type GetQueueStatusApiPvpQueueStatusGetData = {
     body?: never;
     path?: never;
@@ -1049,6 +1098,29 @@ export type ValidateTokenApiAuthValidateTokenPostErrors = {
 export type ValidateTokenApiAuthValidateTokenPostError = ValidateTokenApiAuthValidateTokenPostErrors[keyof ValidateTokenApiAuthValidateTokenPostErrors];
 
 export type ValidateTokenApiAuthValidateTokenPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type CheckRoleApiAuthRolePostData = {
+    body: TokenRequest;
+    path?: never;
+    query?: never;
+    url: '/api/auth/role';
+};
+
+export type CheckRoleApiAuthRolePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CheckRoleApiAuthRolePostError = CheckRoleApiAuthRolePostErrors[keyof CheckRoleApiAuthRolePostErrors];
+
+export type CheckRoleApiAuthRolePostResponses = {
     /**
      * Successful Response
      */

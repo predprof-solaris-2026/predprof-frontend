@@ -4,9 +4,9 @@ import { useRef, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Theme } from "@/lib/client";
 import { Section } from "@/components/section";
-import { useRouter } from 'next/navigation'
-import { useToast } from '@/components/ui/toast'
-import { getTasksApiTrainingGet } from '@/lib/client'
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
+import { getTasksApiTrainingGet } from "@/lib/client";
 import {
     InputGroup,
     InputGroupAddon,
@@ -22,28 +22,38 @@ import {
     type BookTextIconHandle,
 } from "@/components/ui/book-text";
 import type { TaskSchema } from "@/lib/client";
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select";
 
 export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
     const [activeTab, setActiveTab] = useState<Theme>("информатика");
     const themes: Theme[] = Array.from(
         new Set(tasks.map((task) => task.theme)),
     );
-    const subjects = Array.from(new Set(tasks.map(t => t.subject))).filter(Boolean) as string[]
-    const difficulties = Array.from(new Set(tasks.map(t => t.difficulty))).filter(Boolean) as string[]
-    const router = useRouter()
-    const { toast } = useToast()
+    const subjects = Array.from(new Set(tasks.map((t) => t.subject))).filter(
+        Boolean,
+    ) as string[];
+    const difficulties = Array.from(
+        new Set(tasks.map((t) => t.difficulty)),
+    ).filter(Boolean) as string[];
+    const router = useRouter();
+    const { toast } = useToast();
 
-    const [qSearch, setQSearch] = useState<string>('')
+    const [qSearch, setQSearch] = useState<string>("");
 
-    const [selSubject, setSelSubject] = useState<string>('all')
-    const [selTheme, setSelTheme] = useState<string>('all')
-    const [selDifficulty, setSelDifficulty] = useState<string>('all')
-    const [limit, setLimit] = useState<number>(10)
-    const [skip, setSkip] = useState<number>(0)
+    const [selSubject, setSelSubject] = useState<string>("all");
+    const [selTheme, setSelTheme] = useState<string>("all");
+    const [selDifficulty, setSelDifficulty] = useState<string>("all");
+    const [limit, setLimit] = useState<number>(10);
+    const [skip, setSkip] = useState<number>(0);
     const gitForkRef = useRef<GitForkIconHandle>(null);
     const plusRef = useRef<PlusIconHandle>(null);
     const atomRef = useRef<AtomIconHandle>(null);
@@ -71,80 +81,158 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
         }
     }, [activeTab]);
 
+    const safeSetLocalStorage = (key: string, value: unknown) => {
+        try {
+            if (
+                typeof window !== "undefined" &&
+                typeof localStorage !== "undefined"
+            ) {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+        } catch (e) {
+            console.warn(`localStorage set failed for ${key}`);
+        }
+    };
+
     return (
         <section id="catalog" className="flex flex-col">
             <div className="p-3 mb-4 border rounded">
                 <div className="grid grid-cols-2 gap-3 mb-3">
-                                        <div>
-                                                <Label>Тема</Label>
-                                                <Select value={selSubject} onValueChange={(v) => setSelSubject(v)}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Все" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="all">Все</SelectItem>
-                                                        {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                        </div>
-                                        <div>
-                                                <Label>Предмет</Label>
-                                                <Select value={selTheme} onValueChange={(v) => setSelTheme(v)}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Все" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="all">Все</SelectItem>
-                                                        {themes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                        </div>
-                                        <div>
-                                                <Label>Уровень</Label>
-                                                <Select value={selDifficulty} onValueChange={(v) => setSelDifficulty(v)}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Все" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="all">Все</SelectItem>
-                                                        {difficulties.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                        </div>
+                    <div>
+                        <Label>Тема</Label>
+                        <Select
+                            value={selSubject}
+                            onValueChange={(v) => setSelSubject(v)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Все" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Все</SelectItem>
+                                {subjects.map((s) => (
+                                    <SelectItem key={s} value={s}>
+                                        {s}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label>Предмет</Label>
+                        <Select
+                            value={selTheme}
+                            onValueChange={(v) => setSelTheme(v)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Все" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Все</SelectItem>
+                                {themes.map((t) => (
+                                    <SelectItem key={t} value={t}>
+                                        {t}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label>Уровень</Label>
+                        <Select
+                            value={selDifficulty}
+                            onValueChange={(v) => setSelDifficulty(v)}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Все" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Все</SelectItem>
+                                {difficulties.map((d) => (
+                                    <SelectItem key={d} value={d}>
+                                        {d}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <div>
                         <Label>Количество</Label>
-                        <Input className="mt-1" type="number" min={1} max={100} value={limit} onChange={(e) => setLimit(Number(e.target.value))} />
+                        <Input
+                            className="mt-1"
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={limit}
+                            onChange={(e) => setLimit(Number(e.target.value))}
+                        />
                     </div>
                     <div>
                         <Label>Пропустить</Label>
-                        <Input className="mt-1" type="number" min={0} value={skip} onChange={(e) => setSkip(Number(e.target.value))} />
+                        <Input
+                            className="mt-1"
+                            type="number"
+                            min={0}
+                            value={skip}
+                            onChange={(e) => setSkip(Number(e.target.value))}
+                        />
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button className="btn btn-primary px-4 py-2" onClick={async () => {
-                        try {
-                            const q: any = {}
-                            if (selSubject && selSubject !== 'all') q.subject = selSubject
-                            if (selTheme && selTheme !== 'all') q.theme = selTheme
-                            if (selDifficulty && selDifficulty !== 'all') q.difficulty = selDifficulty
-                            q.limit = limit ?? 10
-                            q.skip = skip ?? 0
-                            const resp: any = await getTasksApiTrainingGet({ query: q })
-                            const data = (resp as any)?.data || resp
-                            if (!Array.isArray(data) || data.length === 0) {
-                                toast({ title: 'Задания не найдены', variant: 'destructive' })
-                                return
+                    <Button
+                        className="btn btn-primary px-4 py-2"
+                        onClick={async () => {
+                            try {
+                                const q: Record<string, unknown> = {};
+                                if (selSubject && selSubject !== "all")
+                                    q.subject = selSubject;
+                                if (selTheme && selTheme !== "all")
+                                    q.theme = selTheme;
+                                if (selDifficulty && selDifficulty !== "all")
+                                    q.difficulty = selDifficulty;
+                                q.limit = limit ?? 10;
+                                q.skip = skip ?? 0;
+
+                                const resp: unknown =
+                                    await getTasksApiTrainingGet({ query: q });
+                                let data: unknown;
+                                if (
+                                    resp &&
+                                    typeof resp === "object" &&
+                                    "data" in (resp as Record<string, unknown>)
+                                ) {
+                                    data = (resp as Record<string, unknown>)
+                                        .data;
+                                } else {
+                                    data = resp;
+                                }
+
+                                if (!Array.isArray(data) || data.length === 0) {
+                                    toast({
+                                        title: "Задания не найдены",
+                                        variant: "destructive",
+                                    });
+                                    return;
+                                }
+
+                                const arr = Array.isArray(data)
+                                    ? (data as TaskSchema[])
+                                    : [];
+                                safeSetLocalStorage("trainingProgress", {});
+                                safeSetLocalStorage("trainingList", arr);
+
+                                const firstId = arr[0]?.id;
+                                if (firstId) router.push(`/task/${firstId}`);
+                            } catch (err) {
+                                console.error(err);
+                                toast({
+                                    title: "Ошибка получения тренировок",
+                                    variant: "destructive",
+                                });
                             }
-                            // reset previous training progress, save new training list and navigate to first task
-                            try { localStorage.setItem('trainingProgress', JSON.stringify({})) } catch {}
-                            try { localStorage.setItem('trainingList', JSON.stringify(data)) } catch {}
-                            const firstId = data[0]?.id;
-                            if (firstId) router.push(`/task/${firstId}`)
-                        } catch (err: any) {
-                            console.error(err)
-                            toast({ title: 'Ошибка получения тренировок', variant: 'destructive' })
-                        }
-                    }}>Начать тренировку</Button>
+                        }}
+                    >
+                        Начать тренировку
+                    </Button>
                 </div>
             </div>
             <div className="mt-4 w-full">
@@ -153,14 +241,12 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                         <InputGroupAddon>
                             <Search className="h-4 w-4 text-muted-foreground" />
                         </InputGroupAddon>
-                        <InputGroupInput>
-                            <Input
-                                placeholder="Найти задания"
-                                value={qSearch}
-                                onChange={(e) => setQSearch(e.target.value)}
-                                className="w-full"
-                            />
-                        </InputGroupInput>
+                        <InputGroupInput
+                            placeholder="Найти задания"
+                            value={qSearch}
+                            onChange={(e) => setQSearch(e.target.value)}
+                            className="w-full"
+                        />
                     </InputGroup>
                 </div>
 
@@ -168,23 +254,55 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                     <div className="space-y-3">
                         {tasks
                             .filter((t) => {
-                                const q = qSearch.toLowerCase()
-                                const title = (t.title || '').toString().toLowerCase()
-                                const text = (t.task_text || '').toString().toLowerCase()
-                                const subject = (t.subject || '').toString().toLowerCase()
-                                const theme = (t.theme || '').toString().toLowerCase()
-                                const difficulty = (t.difficulty || '').toString().toLowerCase()
-                                return title.includes(q) || text.includes(q) || subject.includes(q) || theme.includes(q) || difficulty.includes(q)
+                                const q = qSearch.toLowerCase();
+                                const title = (t.title || "")
+                                    .toString()
+                                    .toLowerCase();
+                                const text = (t.task_text || "")
+                                    .toString()
+                                    .toLowerCase();
+                                const subject = (t.subject || "")
+                                    .toString()
+                                    .toLowerCase();
+                                const theme = (t.theme || "")
+                                    .toString()
+                                    .toLowerCase();
+                                const difficulty = (t.difficulty || "")
+                                    .toString()
+                                    .toLowerCase();
+                                return (
+                                    title.includes(q) ||
+                                    text.includes(q) ||
+                                    subject.includes(q) ||
+                                    theme.includes(q) ||
+                                    difficulty.includes(q)
+                                );
                             })
-                            .map((t: any) => (
-                                <div key={t.id ?? t.task_id} className="p-3 border rounded flex justify-between items-start">
+                            .map((t: TaskSchema) => (
+                                <div
+                                    key={t.id}
+                                    className="p-3 border rounded flex justify-between items-start"
+                                >
                                     <div>
-                                        <div className="font-medium">{t.title}</div>
-                                        <div className="text-sm text-muted-foreground">{t.subject} — {t.theme}</div>
-                                        <div className="text-sm text-muted-foreground">{(t.task_text || '').slice(0, 200)}</div>
+                                        <div className="font-medium">
+                                            {t.title}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {t.subject} — {t.theme}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {(t.task_text || "").slice(0, 200)}
+                                        </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button size="sm" onClick={() => router.push(`/task/${t.id ?? t.task_id}`)}>Открыть</Button>
+                                        <Button
+                                            size="sm"
+                                            onClick={() =>
+                                                router.push(`/task/${t.id}`)
+                                            }
+                                        >
+                                            Открыть
+                                        </Button>
                                     </div>
                                 </div>
                             ))}
@@ -194,7 +312,7 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                         defaultValue={"информатика"}
                         onValueChange={(value) => setActiveTab(value as Theme)}
                     >
-                        <TabsList className="mt-5 w-full">
+                        <TabsList className="mt-5 w-full overflow-x-scroll overflow-y-hidden lg:overflow-x-hidden pl-25 lg:pl-0">
                             <TabsTrigger value={"информатика"}>
                                 <GitForkIcon ref={gitForkRef} />
                                 <span>Информатика</span>
@@ -215,7 +333,13 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                         {themes.map((theme, i) => (
                             <TabsContent value={theme} className="p-3" key={i}>
                                 {Array.from(
-                                    new Set(tasks.filter(task => task.theme == theme).map((task) => task.subject)),
+                                    new Set(
+                                        tasks
+                                            .filter(
+                                                (task) => task.theme == theme,
+                                            )
+                                            .map((task) => task.subject),
+                                    ),
                                 ).map((subject) => (
                                     <Section
                                         key={subject}

@@ -20,7 +20,7 @@ export default function Header() {
     useEffect(() => {
         const t = getTokenFromCookie();
         if (t && !token) setToken(t);
-    }, []);
+    }, [token, setToken]);
 
     const handleLogout = () => {
         clearTokenCookie();

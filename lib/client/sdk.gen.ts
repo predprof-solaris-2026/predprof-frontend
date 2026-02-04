@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { CheckAnswerApiTrainingTaskTaskIdCheckPostData, CheckAnswerApiTrainingTaskTaskIdCheckPostErrors, CheckAnswerApiTrainingTaskTaskIdCheckPostResponses, CheckTaskApiTasksTaskIdCheckPostData, CheckTaskApiTasksTaskIdCheckPostErrors, CheckTaskApiTasksTaskIdCheckPostResponses, DeleteTaskApiTasksTaskIdDeleteData, DeleteTaskApiTasksTaskIdDeleteErrors, DeleteTaskApiTasksTaskIdDeleteResponses, GetAllUsersApiUserGetData, GetAllUsersApiUserGetResponses, GetDefiniteTaskApiTasksGetTaskIdGetData, GetDefiniteTaskApiTasksGetTaskIdGetErrors, GetDefiniteTaskApiTasksGetTaskIdGetResponses, GetLeaderboardApiPvpRatingLeaderboardGetData, GetLeaderboardApiPvpRatingLeaderboardGetErrors, GetLeaderboardApiPvpRatingLeaderboardGetResponses, GetLeaderboardApiRatingLeaderboardGetData, GetLeaderboardApiRatingLeaderboardGetErrors, GetLeaderboardApiRatingLeaderboardGetResponses, GetMyRatingApiRatingMeGetData, GetMyRatingApiRatingMeGetResponses, GetMyRatingHistoryApiRatingHistoryMeGetData, GetMyRatingHistoryApiRatingHistoryMeGetErrors, GetMyRatingHistoryApiRatingHistoryMeGetResponses, GetMyStatsApiStatsMeGetData, GetMyStatsApiStatsMeGetResponses, GetQueueStatusApiPvpQueueStatusGetData, GetQueueStatusApiPvpQueueStatusGetResponses, GetRatingProjectionApiRatingProjectionGetData, GetRatingProjectionApiRatingProjectionGetErrors, GetRatingProjectionApiRatingProjectionGetResponses, GetRecentMatchesApiPvpMatchesRecentGetData, GetRecentMatchesApiPvpMatchesRecentGetErrors, GetRecentMatchesApiPvpMatchesRecentGetResponses, GetTaskHintApiTrainingTaskTaskIdHintGetData, GetTaskHintApiTrainingTaskTaskIdHintGetErrors, GetTaskHintApiTrainingTaskTaskIdHintGetResponses, GetTasksApiTasksGetData, GetTasksApiTasksGetResponses, GetTasksApiTrainingGetData, GetTasksApiTrainingGetErrors, GetTasksApiTrainingGetResponses, GetTasksToCsvApiTasksExportCsvGetData, GetTasksToCsvApiTasksExportCsvGetErrors, GetTasksToCsvApiTasksExportCsvGetResponses, GetTasksToJsonApiTasksExportGetData, GetTasksToJsonApiTasksExportGetErrors, GetTasksToJsonApiTasksExportGetResponses, GetUserByIdApiUserUserIdGetData, GetUserByIdApiUserUserIdGetErrors, GetUserByIdApiUserUserIdGetResponses, GetUserByTokenApiUserTokenGetData, GetUserByTokenApiUserTokenGetResponses, GetUserRatingApiRatingUsersUserIdGetData, GetUserRatingApiRatingUsersUserIdGetErrors, GetUserRatingApiRatingUsersUserIdGetResponses, GetUserStatsApiStatsUsersUserIdGetData, GetUserStatsApiStatsUsersUserIdGetErrors, GetUserStatsApiStatsUsersUserIdGetResponses, GetWinProbabilityApiRatingProbabilityGetData, GetWinProbabilityApiRatingProbabilityGetErrors, GetWinProbabilityApiRatingProbabilityGetResponses, ImportTasksApiTasksUploadImportCsvPostData, ImportTasksApiTasksUploadImportCsvPostErrors, ImportTasksApiTasksUploadImportCsvPostResponses, LogInUserApiUserLoginPostData, LogInUserApiUserLoginPostErrors, LogInUserApiUserLoginPostResponses, PostTasksApiTasksUploadImportJsonPostData, PostTasksApiTasksUploadImportJsonPostErrors, PostTasksApiTasksUploadImportJsonPostResponses, PostTasksApiTasksUploadPostData, PostTasksApiTasksUploadPostErrors, PostTasksApiTasksUploadPostResponses, RegistrationUserApiUserCreatePostData, RegistrationUserApiUserCreatePostErrors, RegistrationUserApiUserCreatePostResponses, UpdateTaskApiTasksTaskIdPatchData, UpdateTaskApiTasksTaskIdPatchErrors, UpdateTaskApiTasksTaskIdPatchResponses, ValidateTokenApiAuthValidateTokenPostData, ValidateTokenApiAuthValidateTokenPostErrors, ValidateTokenApiAuthValidateTokenPostResponses } from './types.gen';
+import type { CheckAnswerApiTrainingTaskTaskIdCheckPostData, CheckAnswerApiTrainingTaskTaskIdCheckPostErrors, CheckAnswerApiTrainingTaskTaskIdCheckPostResponses, CheckRoleApiAuthRolePostData, CheckRoleApiAuthRolePostErrors, CheckRoleApiAuthRolePostResponses, CheckTaskApiTasksTaskIdCheckPostData, CheckTaskApiTasksTaskIdCheckPostErrors, CheckTaskApiTasksTaskIdCheckPostResponses, DeleteTaskApiTasksTaskIdDeleteData, DeleteTaskApiTasksTaskIdDeleteErrors, DeleteTaskApiTasksTaskIdDeleteResponses, GenerateTaskViaGigachatApiTasksGeneratePostData, GenerateTaskViaGigachatApiTasksGeneratePostErrors, GenerateTaskViaGigachatApiTasksGeneratePostResponses, GetAllUsersApiUserGetData, GetAllUsersApiUserGetResponses, GetDefiniteTaskApiTasksGetTaskIdGetData, GetDefiniteTaskApiTasksGetTaskIdGetErrors, GetDefiniteTaskApiTasksGetTaskIdGetResponses, GetLeaderboardApiPvpRatingLeaderboardGetData, GetLeaderboardApiPvpRatingLeaderboardGetErrors, GetLeaderboardApiPvpRatingLeaderboardGetResponses, GetLeaderboardApiRatingLeaderboardGetData, GetLeaderboardApiRatingLeaderboardGetErrors, GetLeaderboardApiRatingLeaderboardGetResponses, GetMyRatingApiRatingMeGetData, GetMyRatingApiRatingMeGetResponses, GetMyRatingHistoryApiRatingHistoryMeGetData, GetMyRatingHistoryApiRatingHistoryMeGetErrors, GetMyRatingHistoryApiRatingHistoryMeGetResponses, GetMyStatsApiStatsMeGetData, GetMyStatsApiStatsMeGetResponses, GetQueueStatusApiPvpQueueStatusGetData, GetQueueStatusApiPvpQueueStatusGetResponses, GetRatingProjectionApiRatingProjectionGetData, GetRatingProjectionApiRatingProjectionGetErrors, GetRatingProjectionApiRatingProjectionGetResponses, GetRecentMatchesApiPvpMatchesRecentGetData, GetRecentMatchesApiPvpMatchesRecentGetErrors, GetRecentMatchesApiPvpMatchesRecentGetResponses, GetTaskHintApiTrainingTaskTaskIdHintGetData, GetTaskHintApiTrainingTaskTaskIdHintGetErrors, GetTaskHintApiTrainingTaskTaskIdHintGetResponses, GetTasksApiTasksGetData, GetTasksApiTasksGetResponses, GetTasksApiTrainingGetData, GetTasksApiTrainingGetErrors, GetTasksApiTrainingGetResponses, GetTasksToCsvApiTasksExportCsvGetData, GetTasksToCsvApiTasksExportCsvGetErrors, GetTasksToCsvApiTasksExportCsvGetResponses, GetTasksToJsonApiTasksExportGetData, GetTasksToJsonApiTasksExportGetErrors, GetTasksToJsonApiTasksExportGetResponses, GetUserByIdApiUserUserIdGetData, GetUserByIdApiUserUserIdGetErrors, GetUserByIdApiUserUserIdGetResponses, GetUserByTokenApiUserTokenGetData, GetUserByTokenApiUserTokenGetResponses, GetUserRatingApiRatingUsersUserIdGetData, GetUserRatingApiRatingUsersUserIdGetErrors, GetUserRatingApiRatingUsersUserIdGetResponses, GetUserStatsApiStatsUsersUserIdGetData, GetUserStatsApiStatsUsersUserIdGetErrors, GetUserStatsApiStatsUsersUserIdGetResponses, GetWinProbabilityApiRatingProbabilityGetData, GetWinProbabilityApiRatingProbabilityGetErrors, GetWinProbabilityApiRatingProbabilityGetResponses, ImportTasksApiTasksUploadImportCsvPostData, ImportTasksApiTasksUploadImportCsvPostErrors, ImportTasksApiTasksUploadImportCsvPostResponses, LogInUserApiUserLoginPostData, LogInUserApiUserLoginPostErrors, LogInUserApiUserLoginPostResponses, PostTasksApiTasksUploadImportJsonPostData, PostTasksApiTasksUploadImportJsonPostErrors, PostTasksApiTasksUploadImportJsonPostResponses, PostTasksApiTasksUploadPostData, PostTasksApiTasksUploadPostErrors, PostTasksApiTasksUploadPostResponses, RegistrationUserApiUserCreatePostData, RegistrationUserApiUserCreatePostErrors, RegistrationUserApiUserCreatePostResponses, UpdateTaskApiTasksTaskIdPatchData, UpdateTaskApiTasksTaskIdPatchErrors, UpdateTaskApiTasksTaskIdPatchResponses, ValidateTokenApiAuthValidateTokenPostData, ValidateTokenApiAuthValidateTokenPostErrors, ValidateTokenApiAuthValidateTokenPostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -186,6 +186,21 @@ export const getTasksToCsvApiTasksExportCsvGet = <ThrowOnError extends boolean =
 });
 
 /**
+ * Generate Task Via Gigachat
+ *
+ * Сгенерировать одну задачу через GigaChat и сохранить в БД
+ */
+export const generateTaskViaGigachatApiTasksGeneratePost = <ThrowOnError extends boolean = false>(options: Options<GenerateTaskViaGigachatApiTasksGeneratePostData, ThrowOnError>) => (options.client ?? client).post<GenerateTaskViaGigachatApiTasksGeneratePostResponses, GenerateTaskViaGigachatApiTasksGeneratePostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/tasks/generate',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Get Queue Status
  */
 export const getQueueStatusApiPvpQueueStatusGet = <ThrowOnError extends boolean = false>(options?: Options<GetQueueStatusApiPvpQueueStatusGetData, ThrowOnError>) => (options?.client ?? client).get<GetQueueStatusApiPvpQueueStatusGetResponses, unknown, ThrowOnError>({
@@ -213,6 +228,18 @@ export const getLeaderboardApiPvpRatingLeaderboardGet = <ThrowOnError extends bo
  */
 export const validateTokenApiAuthValidateTokenPost = <ThrowOnError extends boolean = false>(options: Options<ValidateTokenApiAuthValidateTokenPostData, ThrowOnError>) => (options.client ?? client).post<ValidateTokenApiAuthValidateTokenPostResponses, ValidateTokenApiAuthValidateTokenPostErrors, ThrowOnError>({
     url: '/api/auth/validate-token',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Check Role
+ */
+export const checkRoleApiAuthRolePost = <ThrowOnError extends boolean = false>(options: Options<CheckRoleApiAuthRolePostData, ThrowOnError>) => (options.client ?? client).post<CheckRoleApiAuthRolePostResponses, CheckRoleApiAuthRolePostErrors, ThrowOnError>({
+    url: '/api/auth/role',
     ...options,
     headers: {
         'Content-Type': 'application/json',

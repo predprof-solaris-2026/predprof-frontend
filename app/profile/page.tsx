@@ -12,17 +12,46 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts"
 import { getTokenFromCookie } from "@/lib/auth"
 import Link from "next/link"
 
+type User = {
+  id?: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  name?: string
+  elo_rating?: number
+  is_blocked?: boolean
+}
+
+type Stats = {
+  pvp?: { wins?: number; matches?: number; losses?: number; draws?: number }
+  training?: { correct?: number; attempts?: number; accuracy_pct?: number }
+}
+
+type HistoryItem = {
+  match_id?: string
+  opponent?: { first_name?: string; last_name?: string; email?: string }
+  my_rating_before?: number
+  my_rating_delta?: number
+  result?: string
+  state?: string
+}
+
+type History = { items?: HistoryItem[] }
+
+type Probability = { my_rating?: number; opponent_rating?: number; expected_score?: number }
+type Projection = { deltas?: { win?: number; draw?: number; loss?: number } }
+
 export default function ProfilePage() {
-  const storeUser = useUserStore((s) => s.user)
+  const storeUser = useUserStore((s) => s.user) as User | null
   const setStoreUser = useUserStore((s) => s.setUser)
-  const [user, setUser] = useState<any | null>(storeUser || null)
+  const [user, setUser] = useState<User | null>(storeUser ?? null)
   const [loading, setLoading] = useState(false)
-  const [stats, setStats] = useState<any | null>(null)
-  const [history, setHistory] = useState<any | null>(null)
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [history, setHistory] = useState<History | null>(null)
   const [historyLimit, setHistoryLimit] = useState<number>(10)
-  const [oppRating, setOppRating] = useState<number | ''>('')
-  const [prob, setProb] = useState<any | null>(null)
-  const [projection, setProjection] = useState<any | null>(null)
+  const [oppRating, setOppRating] = useState<number | "">("")
+  const [prob, setProb] = useState<Probability | null>(null)
+  const [projection, setProjection] = useState<Projection | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -31,13 +60,13 @@ export default function ProfilePage() {
       if (!id || id === "undefined") return
       setLoading(true)
       try {
-        const options: any = { path: { user_id: id } }
-        if (token) options.headers = { Authorization: `Bearer ${token}` }
-        const resp: any = await getUserByIdApiUserUserIdGet(options)
-        const data = resp?.data || resp
-        if (mounted && data && (data.id || data.email)) {
-          setUser(data)
-          setStoreUser(data)
+        const options: Record<string, unknown> = { path: { user_id: id } }
+        if (token) (options as Record<string, unknown>).headers = { Authorization: `Bearer ${token}` }
+        const resp: unknown = await getUserByIdApiUserUserIdGet(options)
+        const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
+        if (mounted && data && ( (data as Record<string, unknown>).id || (data as Record<string, unknown>).email)) {
+          setUser(data as User)
+          setStoreUser(data as User)
         }
       } catch (e) {
         console.error("Failed to load user:", e)
@@ -57,7 +86,7 @@ export default function ProfilePage() {
           return
         }
 
-        // если есть только id в сторе — попробуем дозагрузить по id
+        
         if (storeUser?.id) {
           await loadById(String(storeUser.id), token)
           return
@@ -65,20 +94,20 @@ export default function ProfilePage() {
 
         if (!token) return
 
-        // Попробуем получить пользователя по токену через серверный эндпоинт
+        
         try {
-          const resp: any = await (await import("@/lib/client")).getUserByTokenApiUserTokenGet({ headers: { Authorization: `Bearer ${token}` } })
-          const data = resp?.data || resp
-          if (mounted && data && (data.id || data.email)) {
-            setUser(data)
-            setStoreUser(data)
+          const resp: unknown = await (await import("@/lib/client")).getUserByTokenApiUserTokenGet({ headers: { Authorization: `Bearer ${token}` } })
+          const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
+          if (mounted && data && ((data as Record<string, unknown>).id || (data as Record<string, unknown>).email)) {
+            setUser(data as User)
+            setStoreUser(data as User)
             return
           }
         } catch (e) {
           console.error("getUserByToken failed:", e)
         }
 
-        // fallback: try to decode JWT and load by id
+        
         try {
           const parts = token.split('.')
           if (parts.length >= 2) {
@@ -97,22 +126,24 @@ export default function ProfilePage() {
 
     const loadStats = async (token?: string | null, id?: string) => {
       try {
-        const options: any = {}
-        if (token) options.headers = { Authorization: `Bearer ${token}` }
-        let resp: any
+        const options: Record<string, unknown> = {}
+        if (token) (options as Record<string, unknown>).headers = { Authorization: `Bearer ${token}` }
+        let resp: unknown
         if (token && (!id || id === String(storeUser?.id))) {
           resp = await getMyStatsApiStatsMeGet(options)
         } else if (id) {
           resp = await getUserStatsApiStatsUsersUserIdGet({ path: { user_id: id } })
+        } else {
+          resp = null
         }
-        const data = resp?.data || resp
-        if (mounted && data) setStats(data)
+        const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
+        if (mounted && data) setStats(data as Stats)
       } catch (e) {
-        console.error('Failed to load stats', e)
+        console.error("Failed to load stats", e)
       }
     }
 
-    // loadHistory moved to fetchHistory outside so we can control limit
+    
 
     tryLoad()
     // load stats and history
@@ -128,20 +159,20 @@ export default function ProfilePage() {
     const token = getTokenFromCookie()
     if (!token) return
     try {
-      const resp: any = await getMyRatingHistoryApiRatingHistoryMeGet({ headers: { Authorization: `Bearer ${token}` }, query: { limit } })
-      const data = resp?.data || resp
-      setHistory(data)
+      const resp: unknown = await getMyRatingHistoryApiRatingHistoryMeGet({ headers: { Authorization: `Bearer ${token}` }, query: { limit } })
+      const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
+      setHistory(data as History)
     } catch (e) {
       console.error('Failed to load history', e)
     }
   }
 
-  const initials = (u: any) => {
+  const initials = (u?: User | null) => {
     if (!u) return "?"
     const f = u.first_name || u.name || ""
     const l = u.last_name || ""
     const res = (f.slice(0, 1) + l.slice(0, 1)).toUpperCase()
-    return res || u.email?.slice(0, 1).toUpperCase() || "?"
+    return res || (u.email ? String(u.email).slice(0, 1).toUpperCase() : "?")
   }
 
   if (loading && !user) {
@@ -248,22 +279,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="grid gap-6">
-            {prob && (
-              <div className="p-3 border rounded">
-                <div>Мой рейтинг: {prob.my_rating}</div>
-                <div>Рейтинг соперника: {prob.opponent_rating}</div>
-                <div>Ожидаемый счёт: {(prob.expected_score * 100).toFixed(1)}%</div>
-              </div>
-            )}
-            {projection && (
-              <div className="p-3 border rounded">
-                <div>Дельты при исходе: Win {projection.deltas.win} • Draw {projection.deltas.draw} • Loss {projection.deltas.loss}</div>
-              </div>
-            )}
-          </div>
-
-          {/* Rating line chart based on history */}
           {history && history.items && history.items.length > 0 && (
             <div className="grid gap-4">
               <h3 className="text-lg font-semibold">Динамика рейтинга</h3>
@@ -276,8 +291,8 @@ export default function ProfilePage() {
                     {
                     // prepare chart data: oldest -> newest
                     (() => {
-                      const items = [...history.items].slice().reverse()
-                      const data = items.map((it: any, idx: number) => ({
+                      const items = [...(history?.items ?? [])].slice().reverse() as HistoryItem[]
+                      const data = items.map((it: HistoryItem, idx: number) => ({
                         date: `#${idx + 1}`,
                         rating: (it.my_rating_before ?? 0) + (it.my_rating_delta ?? 0),
                       }))
@@ -328,13 +343,13 @@ export default function ProfilePage() {
             <div className="grid gap-4">
               <h3 className="text-lg font-semibold">История матчей</h3>
               <div className="space-y-2">
-                {history.items.map((it: any) => (
-                  <div key={it.match_id} className="p-3 border rounded flex items-center gap-4 relative">
-                    <div className="flex-1 min-w-0 pr-24">
-                      <div className="text-sm truncate">Против: {it.opponent?.first_name && it.opponent?.last_name ? `${it.opponent.first_name} ${it.opponent.last_name}` : it.opponent?.email ?? '—'}</div>
+                {(history?.items ?? []).map((it: HistoryItem) => (
+                  <div key={it.match_id} className="p-3 border rounded flex lg:items-center gap-4 relative flex-col items-start lg:flex-row">
+                    <div className="flex-1 min-w-0 lg:pr-24">
+                      <div className="text-sm truncate">Против: {it.opponent?.first_name && it.opponent?.last_name ? `${it.opponent.first_name} ${it.opponent.last_name}` : it.opponent?.email ?? "—"}</div>
                     </div>
 
-                    <div className="absolute left-1/2 transform -translate-x-1/2">
+                    <div className="lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
                       <div className="text-sm text-center">Рейтинг до: {it.my_rating_before} • Δ {it.my_rating_delta}</div>
                     </div>
 

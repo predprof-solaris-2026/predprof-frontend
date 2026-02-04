@@ -13,7 +13,6 @@ export async function checkAnswer(
     taskId: string,
     tokenFromClient?: string | null,
 ): Promise<CheckAnswerResult> {
-    // Простая валидация на клиенте
     if (!taskId) {
         return { correct: false, message: "Отсутствует идентификатор задания" };
     }
@@ -26,20 +25,19 @@ export async function checkAnswer(
         try {
             if (!err) return "Произошла ошибка при проверке ответа";
 
-            // Сервер может вернуть объект с detail (валидация FastAPI)
-            if (typeof err === 'object' && err !== null) {
-                const e = err as any;
-                if (Array.isArray(e.detail) && e.detail.length > 0) {
-                    const first = e.detail[0];
+            if (typeof err === "object" && err !== null) {
+                const rec = err as Record<string, unknown>;
+                if (Array.isArray(rec.detail) && rec.detail.length > 0) {
+                    const first = rec.detail[0] as Record<string, unknown> | undefined;
                     if (first?.msg) return String(first.msg);
                     if (first?.message) return String(first.message);
                 }
-                if (e?.message) return String(e.message);
-                if (e?.detail) return String(e.detail);
+                if (rec.message) return String(rec.message);
+                if (rec.detail) return String(rec.detail);
             }
 
             return String(err);
-        } catch (e) {
+        } catch {
             return "Произошла ошибка при проверке ответа";
         }
     };
@@ -54,40 +52,42 @@ export async function checkAnswer(
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
 
-        const data = res.data as unknown;
+        const data: unknown = (res as Record<string, unknown>)?.data ?? res;
 
-        // Сервер возвращает true/false (boolean) — корректен ли ответ
-        if (typeof data === 'boolean') {
+        if (typeof data === "boolean") {
             return { correct: data };
         }
 
-        // Если пришёл объект с полем correct
-        if (typeof data === 'object' && data !== null) {
-            const d = data as any;
-            if (typeof d === 'boolean') return { correct: d };
-            if (typeof d.correct === 'boolean') return { correct: d.correct };
-            return { correct: false, message: JSON.stringify(d) };
+        if (typeof data === "object" && data !== null) {
+            const drec = data as Record<string, unknown>;
+            if (typeof drec.correct === "boolean") return { correct: Boolean(drec.correct) };
+            return { correct: false, message: JSON.stringify(drec) };
         }
 
-        return { correct: false, message: 'Неверный формат ответа от сервера' };
+        return { correct: false, message: "Неверный формат ответа от сервера" };
     } catch (err) {
         console.error('checkAnswer error:', err);
         return { correct: false, message: parseErrorMessage(err) };
     }
 }
 
-export async function requestHint(taskId: string, tokenFromClient?: string | null): Promise<{ hint?: string; error?: string }>{
+export async function requestHint(taskId: string, tokenFromClient?: string | null): Promise<{ hint?: string; error?: string }> {
     if (!taskId) return { error: 'Отсутствует идентификатор задания' };
 
     try {
         const cookieStore = await cookies();
         const token = tokenFromClient ?? cookieStore.get('token')?.value ?? null;
 
-        const res = await getTaskHintApiTrainingTaskTaskIdHintGet({ path: { task_id: taskId }, headers: token ? { Authorization: `Bearer ${token}` } : undefined });
-        const data = res.data as unknown;
+        const res = await getTaskHintApiTrainingTaskTaskIdHintGet({
+            path: { task_id: taskId },
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
 
-        if (typeof data === 'object' && data !== null) return { hint: (data as any).hint };
-        return { error: 'Пустая подсказка' };
+        const data: unknown = (res as Record<string, unknown>)?.data ?? res;
+        if (typeof data === "object" && data !== null && "hint" in (data as Record<string, unknown>)) {
+            return { hint: String((data as Record<string, unknown>).hint ?? "") };
+        }
+        return { error: "Пустая подсказка" };
     } catch (err) {
         console.error('requestHint error:', err);
         return { error: 'Ошибка при получении подсказки' };

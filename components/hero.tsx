@@ -10,10 +10,10 @@ export function HeroBlock() {
 
     return (
         <div className="flex flex-col items-center relative bottom-12 sm:bottom-20">
-            <span className="uppercase font-black text-md sm:text-xl relative -bottom-6 sm:-bottom-10">
+            <span className="uppercase font-black text-md sm:text-xl relative -bottom-10">
                 Решай задания на Платформе и
             </span>
-            <span className="uppercase font-black text-5xl sm:text-[128px] mt-10">
+            <span className="uppercase font-black text-5xl sm:text-[128px] mt-10 text-center">
                 Возьми всерос
             </span>
             <Image
@@ -21,15 +21,14 @@ export function HeroBlock() {
                 width={700}
                 height={700}
                 alt="Диплом Всероса"
-                className="relative bottom-12 sm:bottom-20 z-10 drop-shadow-2xl drop-shadow-black/50 dark:drop-shadow-white/50 max-w-full h-auto"
+                className="relative sm:bottom-20 z-10 drop-shadow-2xl drop-shadow-black/50 dark:drop-shadow-white/50 max-w-full h-auto"
             />
-            <div className="flex justify-center gap-3 sm:gap-5 relative bottom-8 sm:bottom-20">
+            <div className="flex justify-center gap-5 lg:gap-3 sm:gap-5 lg:relative bottom-8 sm:bottom-20 flex-col lg:flex-row">
                 <Button
                     size={"lg"}
-                    className="text-lg px-5 py-3 sm:px-10 sm:py-8 rounded-3xl flex justify-center items-center gap-3 cursor-pointer"
+                    className="text-lg px-5 sm:px-10 py-8 rounded-3xl flex justify-center items-center gap-3 cursor-pointer"
                     variant={"default"}
                     onClick={() => {
-                        // window.scrollTo({top: 750, behavior: 'smooth'});
                         window.scrollTo({
                             top:
                                 (document.getElementById("catalog")
@@ -43,7 +42,7 @@ export function HeroBlock() {
                 </Button>
                 <Button
                     size={"lg"}
-                    className="text-lg px-5 py-3 sm:px-10 sm:py-8 rounded-3xl flex justify-center items-center gap-3 cursor-pointer"
+                    className="text-lg px-5 sm:px-10 py-8 rounded-3xl flex justify-center items-center gap-3 cursor-pointer"
                     variant={"outline"}
                     onClick={() => router.push("/pvp")}
                 >

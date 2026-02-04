@@ -1,69 +1,114 @@
 "use client";
 
-import { Send, Plus, Lightbulb } from "lucide-react";
+import { Send, Plus, Lightbulb, Loader2, Check, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { TaskSchema } from "@/lib/client";
-import { Loader2, Check, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation'
+import type { TaskSchema, Theme as GenTheme, Difficulty as GenDifficulty } from "@/lib/client";
+import { generateTaskViaGigachatApiTasksGeneratePost } from '@/lib/client';
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from 'next/navigation';
 import { checkAnswer, requestHint } from "@/app/actions";
 import useUserStore from "@/lib/store/userStore";
 
+// Вспомогательная функция для склеивания классов (если у вас нет clsx/cn, используем простую версию)
+function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
+}
+
 export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
-    const [trainingList, setTrainingList] = useState<TaskSchema[] | null>(null)
-    const [trainingProgress, setTrainingProgress] = useState<Record<string, 'correct' | 'wrong' | 'none'>>({})
+    const [trainingList, setTrainingList] = useState<TaskSchema[] | null>(null);
+    const [trainingProgress, setTrainingProgress] = useState<Record<string, 'correct' | 'wrong' | 'none'>>({});
+    
+    // Состояния текущего задания
     const [answer, setAnswer] = useState<string>("");
     const [hint, setHint] = useState<string | null>(null);
     const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-    const [lastMessage, setLastMessage] = useState<string | null>(null)
+    const [lastMessage, setLastMessage] = useState<string | null>(null);
+    
+    // Состояния загрузки
     const [loading, setLoading] = useState(false);
     const [loadingHint, setLoadingHint] = useState(false);
+    const [loadingGenerate, setLoadingGenerate] = useState(false);
+
+    const navRef = useRef<HTMLElement>(null);
+
+    const token = useUserStore((s) => s.token);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (navRef.current) {
+            navRef.current.scrollTo({
+                left: navRef.current.scrollWidth,
+                behavior: "smooth",
+            });
+        }
+    }, [trainingList?.length]);
+
+    // Логика инициализации и сохранения списка
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('trainingList')
+            // 1. Загружаем список из LS
+            const raw = localStorage.getItem("trainingList");
+            let list: TaskSchema[] = [];
             if (raw) {
-                const parsed = JSON.parse(raw)
-                if (Array.isArray(parsed)) setTrainingList(parsed)
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) list = parsed as TaskSchema[];
             }
-            const rawProg = localStorage.getItem('trainingProgress')
+
+            // 2. Если есть текущий task, добавляем его или обновляем, НЕ МЕНЯЯ ПОРЯДОК
+            if (task) {
+                const idStr = String(task.id);
+                const existsIndex = list.findIndex((t) => String(t.id) === idStr);
+
+                const nextList = [...list];
+                if (existsIndex !== -1) {
+                    // Если задание уже есть, обновляем объект (на случай изменений), но оставляем на том же месте
+                    nextList[existsIndex] = task;
+                } else {
+                    // Если задания нет, добавляем в конец
+                    nextList.push(task);
+                }
+
+                setTrainingList(nextList);
+                localStorage.setItem("trainingList", JSON.stringify(nextList));
+            } else if (list.length > 0) {
+                setTrainingList(list);
+            }
+
+            // 3. Загружаем прогресс
+            const rawProg = localStorage.getItem("trainingProgress");
             if (rawProg) {
-                const parsed = JSON.parse(rawProg)
-                if (parsed && typeof parsed === 'object') setTrainingProgress(parsed)
+                const parsed = JSON.parse(rawProg);
+                if (parsed && typeof parsed === "object") setTrainingProgress(parsed);
             }
         } catch (e) {
-            // ignore
+            console.error("Error init task list", e);
         }
-    }, [task?.id])
-    const token = useUserStore((s) => s.token);
-    const router = useRouter()
+    }, [task]); // Зависимость от task.id была бы лучше, но task тоже ок, если объект стабилен
 
     async function handleCheckAnswer() {
         setLoading(true);
         setCorrectAnswer(null);
         setIsCorrect(null);
         try {
-                const result = await checkAnswer(answer, task ? task.id : "", token ?? null);
-                const correct = Boolean(result?.correct)
-                setIsCorrect(correct)
-                setLastMessage(result?.message ?? null)
-                // сервер возвращает поле `message`, а не `answer` в CheckAnswerResult;
-                // корректный ответ сейчас не доступен отдельно, поэтому не пытаемся читать `result.answer`
+            const result = await checkAnswer(answer, task ? task.id : "", token ?? null);
+            const correct = Boolean(result?.correct);
+            
+            setIsCorrect(correct);
+            setLastMessage(result?.message ?? null);
 
-                // update training progress for current task
-                try {
-                    const id = task?.id;
-                    if (id) {
-                        const idStr = String(id)
-                        const next = { ...trainingProgress }
-                        next[idStr] = correct ? 'correct' : 'wrong'
-                        setTrainingProgress(next)
-                        localStorage.setItem('trainingProgress', JSON.stringify(next))
-                    }
-                } catch (e) {
-                    // ignore
+            // Обновляем прогресс
+            try {
+                const id = task?.id;
+                if (id) {
+                    const idStr = String(id);
+                    const next = { ...trainingProgress };
+                    next[idStr] = correct ? 'correct' : 'wrong';
+                    setTrainingProgress(next);
+                    localStorage.setItem('trainingProgress', JSON.stringify(next));
                 }
+            } catch {}
         } finally {
             setLoading(false);
         }
@@ -82,117 +127,201 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
         }
     }
 
+    async function handleGenerate() {
+        setLoadingGenerate(true);
+        try {
+            const body = {
+                subject: String(task?.subject ?? "Математика"),
+                theme: (task?.theme ?? "математика") as GenTheme,
+                difficulty: (task?.difficulty ?? "лёгкий") as GenDifficulty,
+            };
+            const resp: unknown = await generateTaskViaGigachatApiTasksGeneratePost({
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                body,
+            });
+            const data: unknown = (resp as Record<string, unknown>)?.data ?? resp;
+            const newTask: TaskSchema = data as TaskSchema;
+
+            if (newTask && newTask.id) {
+                // Добавляем новое задание в конец списка
+                setTrainingList((prev) => {
+                    const next = prev ? [...prev, newTask] : [task as TaskSchema, newTask].filter(Boolean);
+                    try { localStorage.setItem('trainingList', JSON.stringify(next)); } catch {}
+                    return next;
+                });
+                
+                // Сбрасываем стейт UI
+                setHint(null);
+                setCorrectAnswer(null);
+                setIsCorrect(null);
+                setLastMessage(null);
+                setAnswer(""); // Очищаем поле ввода
+                
+                try { router.push(`/task/${newTask.id}`); } catch {}
+            }
+        } catch (err) {
+            console.error('Task generation failed', err);
+        } finally {
+            setLoadingGenerate(false);
+        }
+    }
+
     if (!task) {
         return <div>Задание не найдено</div>;
     }
 
     return (
         <div className="flex justify-start flex-col h-full gap-4 px-4 sm:px-10">
+            {/* Меню навигации */}
             <nav
-                className="flex items-center gap-3 px-3 pt-2 bg-accent rounded-xl overflow-x-scroll shadow-xl"
+                ref={navRef}
+                className="flex items-center gap-3 px-3 py-2 lg:py-0 bg-accent/50 rounded-xl overflow-x-auto shadow-sm min-h-14"
                 style={{
                     scrollbarWidth: "thin",
-                    scrollbarColor: "#00000050 transparent",
+                    scrollbarColor: "#00000020 transparent",
                 }}
             >
                 {trainingList && trainingList.length > 0 ? (
                     trainingList.map((t, i) => {
                         const id = t.id;
-                        const idStr = id ? String(id) : undefined
-                        const status = idStr ? trainingProgress[idStr] : undefined
-                        const isCurrent = String(task?.id) === idStr
-                        let cls = ''
-                        if (status === 'correct') cls = 'bg-green-50 text-green-800 border border-green-100'
-                        if (status === 'wrong') cls = 'bg-red-50 text-red-800 border border-red-100'
+                        const idStr = id ? String(id) : undefined;
+                        const status = idStr ? trainingProgress[idStr] : undefined;
+                        const isCurrent = idStr !== undefined && String(task?.id) === idStr;
+
+                        // Логика стилей для кнопки
+                        let buttonStyles = "font-medium transition-all duration-200 border";
+                        
+                        if (isCurrent) {
+                            // АКТИВНОЕ ЗАДАНИЕ (выделенное)
+                            if (status === "correct") {
+                                buttonStyles += " bg-green-600 text-white border-green-700 hover:bg-green-700 hover:text-white"; // Ярко-зеленый
+                            } else if (status === "wrong") {
+                                buttonStyles += " bg-red-600 text-white border-red-700 hover:bg-red-700 hover:text-white"; // Ярко-красный
+                            } else {
+                                buttonStyles += " bg-white text-black border-gray-300 shadow-md hover:bg-gray-50"; // Белый (как просили)
+                            }
+                        } else {
+                            // НЕАКТИВНОЕ ЗАДАНИЕ (прошлые или будущие)
+                            if (status === "correct") {
+                                buttonStyles += " bg-green-100 text-green-800 border-green-200 hover:bg-green-200"; // Бледный зеленый
+                            } else if (status === "wrong") {
+                                buttonStyles += " bg-red-100 text-red-800 border-red-200 hover:bg-red-200"; // Бледный красный
+                            } else {
+                                buttonStyles += " bg-transparent text-gray-600 border-transparent hover:bg-gray-200"; // Ghost
+                            }
+                        }
+
                         return (
-                            <Button key={idStr ?? i} className={cls} variant={isCurrent ? 'default' : 'ghost'} size={'sm'} onClick={() => router.push(`/task/${idStr}`)}>{i + 1}</Button>
-                        )
+                            <Button
+                                key={idStr ?? `idx-${i}`}
+                                className={cn("min-w-[2.5rem] h-10 w-10 p-0 rounded-lg", buttonStyles)}
+                                // Убираем variant, чтобы полностью контролировать цвета через className
+                                variant="ghost" 
+                                onClick={() => idStr && router.push(`/task/${idStr}`)}
+                            >
+                                {i + 1}
+                            </Button>
+                        );
                     })
                 ) : (
+                    // Фолбек при пустом списке (первая загрузка)
                     <>
-                        <Button className="size-9">1</Button>
-                        <Button className="size-9">
-                            <Plus className="size-4" />
-                        </Button>
+                         <Button className="size-10 bg-white text-black border border-gray-300 shadow-md">1</Button>
                     </>
                 )}
+
+                {/* Кнопка генерации */}
+                <Button 
+                    className="size-10 ml-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border-transparent" 
+                    variant="ghost"
+                    onClick={handleGenerate} 
+                    disabled={loadingGenerate}
+                >
+                    {loadingGenerate ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="size-5" />}
+                </Button>
             </nav>
-                <div className="flex flex-col content-between flex-1 pt-2 py-10 w-full">
+
+            {/* Контент задания */}
+            <div className="flex flex-col content-between flex-1 pt-2 py-10 w-full">
                 <div className="flex flex-col flex-1 gap-3">
-                    <span className="opacity-50">
-                        {task.subject} - {task.theme}
+                    <span className="opacity-50 text-sm font-medium uppercase tracking-wider">
+                        {task.subject} — {task.theme}
                     </span>
-                    <header className="text-3xl font-medium">
+                    <header className="text-3xl font-bold">
                         {task.title}
                     </header>
-                    <div className="mt-5 w-full md:w-2/3 text-justify">
+                    <div className="mt-5 w-full md:w-2/3 text-md text-justify">
                         {task.task_text}
                     </div>
                 </div>
-                <div className="flex gap-3 sm:gap-5 items-center justify-start max-w-full md:max-w-1/2 flex-wrap">
+
+                <div className="flex gap-4 flex-col mt-8">
+                    {/* Блок статуса ответа */}
                     {isCorrect !== null && (
-                        <div className={`w-full p-3 rounded-md flex items-center gap-3 text-sm ${isCorrect ? 'bg-green-50 text-green-800 border border-green-100' : 'bg-red-50 text-red-800 border border-red-100'}`}>
+                        <div className={cn(
+                            "w-full md:w-2/3 p-4 rounded-lg flex items-center gap-3 text-base font-medium border animate-in fade-in slide-in-from-top-2",
+                            isCorrect 
+                                ? "bg-green-50 text-green-900 border-green-200" 
+                                : "bg-red-50 text-red-900 border-red-200"
+                        )}>
                             {isCorrect ? (
-                                <Check className="h-5 w-5 text-green-600" />
+                                <div className="p-1 bg-green-200 rounded-full"><Check className="h-5 w-5 text-green-700" /></div>
                             ) : (
-                                <X className="h-5 w-5 text-red-600" />
+                                <div className="p-1 bg-red-200 rounded-full"><X className="h-5 w-5 text-red-700" /></div>
                             )}
                             <div className="break-words">
-                                {isCorrect ? (correctAnswer ?? 'Правильно') : (lastMessage ?? 'Неверно')}
+                                {isCorrect ? (correctAnswer ?? 'Правильно!') : (lastMessage ?? 'Ответ неверный, попробуйте еще раз.')}
                             </div>
                         </div>
                     )}
+
+                    {/* Блок подсказки */}
                     {hint && (
-                        <div className="w-full p-3 rounded-md bg-yellow-50 text-yellow-800 border border-yellow-100 text-sm">
-                            <div className="font-medium mb-1">Подсказка</div>
-                            <div className="break-words">{hint}</div>
+                        <div className="w-full md:w-2/3 p-4 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-sm animate-in fade-in">
+                            <div className="font-bold flex items-center gap-2 mb-1">
+                                <Lightbulb className="h-4 w-4" />
+                                Подсказка
+                            </div>
+                            <div className="break-words text-amber-800">{hint}</div>
                         </div>
                     )}
-                    <div className="w-full pt-3 text-sm">
-                        Введите свой ответ в поле ниже:
-                    </div>
 
-                    <div className="w-full flex items-stretch gap-3 sm:gap-5">
-                        <Input
-                            placeholder="Ваш ответ"
-                            value={answer}
-                            onChange={(e) => setAnswer(e.target.value)}
-                        />
-                        <div className="flex gap-3">
-                            <Button
-                                className="flex gap-3 items-center"
-                                onClick={handleCheckAnswer}
-                                disabled={loading}
-                                aria-busy={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <span>Проверка...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>Отправить</span>
-                                        <Send />
-                                    </>
-                                )}
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                onClick={handleHint}
-                                disabled={loadingHint}
-                                className="flex gap-2 items-center"
-                            >
-                                {loadingHint ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <>
-                                        <Lightbulb className="h-4 w-4" />
-                                        <span>Подсказка</span>
-                                    </>
-                                )}
-                            </Button>
+                    {/* Форма ввода */}
+                    <div className="w-full md:w-2/3 pt-4">
+                        <div className="text-sm font-medium text-gray-500 mb-2">
+                            Введите ваш ответ:
+                        </div>
+                        <div className="flex items-stretch gap-3 flex-col sm:flex-row">
+                            <Input
+                                placeholder="Ваш ответ..."
+                                value={answer}
+                                onChange={(e) => setAnswer(e.target.value)}
+                                className="text-lg h-12"
+                                onKeyDown={(e) => e.key === 'Enter' && handleCheckAnswer()}
+                            />
+                            <div className="flex gap-2 shrink-0">
+                                <Button
+                                    className="h-12 px-6 text-base gap-2"
+                                    onClick={handleCheckAnswer}
+                                    disabled={loading}
+                                >
+                                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                    <span>Ответить</span>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleHint}
+                                    disabled={loadingHint}
+                                    className="h-12 w-12 p-0 sm:w-auto sm:px-4 text-gray-500 border-gray-300"
+                                    title="Взять подсказку"
+                                >
+                                    {loadingHint ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <Lightbulb className="h-5 w-5" />
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

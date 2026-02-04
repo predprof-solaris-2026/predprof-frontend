@@ -33,6 +33,7 @@ export default function LoginPage() {
   const setToken = useUserStore((s) => s.setToken)
   const setUser = useUserStore((s) => s.setUser)
   const router = useRouter()
+  type LocalUser = { id?: string; email?: string; first_name?: string; last_name?: string }
   
   function validateEmail(e: string) {
     return /\S+@\S+\.\S+/.test(e)
@@ -46,26 +47,26 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // сначала регистрация
       await registrationUserApiUserCreatePost({
         body: { first_name: firstName, last_name: lastName, password, email },
       })
-      // затем сразу логинимся чтобы получить токен
-      const loginResp = await logInUserApiUserLoginPost({ body: { username: email, password } })
-      const token = (loginResp as any)?.data?.access_token || (loginResp as any)?.access_token || (loginResp as any)?.data?.token || (loginResp as any)?.token || null
+      
+      const loginResp: unknown = await logInUserApiUserLoginPost({ body: { username: email, password } })
+      const loginData = loginResp && typeof loginResp === "object" && "data" in (loginResp as Record<string, unknown>) ? (loginResp as Record<string, unknown>).data : loginResp
+      const token = (loginData as Record<string, unknown>)?.access_token ?? (loginData as Record<string, unknown>)?.token ?? null
       if (token) {
-        setTokenCookie(token)
-        setToken(token)
-        // попытка извлечь данные пользователя из ответа (поддерживаем разные структуры)
-        const u = (loginResp as any)?.data?.user || (loginResp as any)?.user || (loginResp as any)?.data?.user_info || (loginResp as any)?.user_info || (loginResp as any)?.profile || null
-        if (u) setUser(u)
+        setTokenCookie(String(token))
+        setToken(String(token))
+        const u = (loginData as Record<string, unknown>)?.user ?? (loginData as Record<string, unknown>)?.user_info ?? (loginData as Record<string, unknown>)?.profile ?? null
+        if (u) setUser(u as unknown as LocalUser)
         router.push("/profile")
         return
       } else {
         setError("Не удалось получить токен после регистрации")
       }
-    } catch (e: any) {
-      setError(e?.message || "Ошибка регистрации")
+    } catch (e: unknown) {
+      const msg = typeof e === "object" && e !== null && "message" in e ? String((e as Record<string, unknown>).message) : String(e)
+      setError(msg || "Ошибка регистрации")
     } finally {
       setLoading(false)
     }
@@ -78,18 +79,20 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const resp = await logInUserApiUserLoginPost({ body: { username: email, password } })
-      const token = (resp as any)?.data?.access_token || (resp as any)?.access_token || (resp as any)?.data?.token || (resp as any)?.token || null
+      const resp: unknown = await logInUserApiUserLoginPost({ body: { username: email, password } })
+      const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
+      const token = (data as Record<string, unknown>)?.access_token ?? (data as Record<string, unknown>)?.token ?? null
       if (token) {
-        setTokenCookie(token)
-        setToken(token)
-        const u = (resp as any)?.data?.user || (resp as any)?.user || (resp as any)?.data?.user_info || (resp as any)?.user_info || (resp as any)?.profile || null
-        if (u) setUser(u)
+        setTokenCookie(String(token))
+        setToken(String(token))
+        const u = (data as Record<string, unknown>)?.user ?? (data as Record<string, unknown>)?.user_info ?? (data as Record<string, unknown>)?.profile ?? null
+        if (u) setUser(u as unknown as LocalUser)
         router.push("/profile")
         return
       }
-    } catch (e: any) {
-      setError(e?.message || "Ошибка входа")
+    } catch (e: unknown) {
+      const msg = typeof e === "object" && e !== null && "message" in e ? String((e as Record<string, unknown>).message) : String(e)
+      setError(msg || "Ошибка входа")
     } finally {
       setLoading(false)
     }
@@ -120,7 +123,7 @@ export default function LoginPage() {
               <TabsTrigger value="register">Регистрация</TabsTrigger>
             </TabsList>
 
-            {/* Вкладка ВХОДА */}
+            
             <TabsContent value="login" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email-login">Email</Label>
@@ -154,7 +157,7 @@ export default function LoginPage() {
               </div>
             </TabsContent>
 
-            {/* Вкладка РЕГИСТРАЦИИ */}
+            
             <TabsContent value="register" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -220,7 +223,7 @@ export default function LoginPage() {
             </TabsContent>
           </Tabs>
 
-          {/* Сообщение об ошибке */}
+          
           {error && (
             <div className="mt-4 flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />

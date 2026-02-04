@@ -10,10 +10,10 @@ export function ThemeSwitcher() {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        const id = setTimeout(() => setMounted(true), 0);
+        return () => clearTimeout(id);
     }, []);
 
-    // Render a neutral placeholder on the server to avoid hydration mismatch.
     if (!mounted) {
         return (
             <Button className="p-2 rounded-full size-10" aria-label="Toggle Theme" aria-hidden>
