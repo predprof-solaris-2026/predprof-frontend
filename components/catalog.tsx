@@ -37,6 +37,8 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
     const router = useRouter()
     const { toast } = useToast()
 
+    const [qSearch, setQSearch] = useState<string>('')
+
     const [selSubject, setSelSubject] = useState<string>('all')
     const [selTheme, setSelTheme] = useState<string>('all')
     const [selDifficulty, setSelDifficulty] = useState<string>('all')
@@ -119,7 +121,7 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button className="btn btn-primary px-4 py-2 rounded" onClick={async () => {
+                    <Button className="btn btn-primary px-4 py-2" onClick={async () => {
                         try {
                             const q: any = {}
                             if (selSubject && selSubject !== 'all') q.subject = selSubject
@@ -145,54 +147,89 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                     }}>Начать тренировку</Button>
                 </div>
             </div>
-            <InputGroup className="h-12">
-                <InputGroupAddon>
-                    <Search />
-                </InputGroupAddon>
-                <InputGroupInput placeholder="Найти задания" />
-                <InputGroupButton className="h-full flex gap-3">
-                    <Search />
-                    <span className="pr-3">Поиск</span>
-                </InputGroupButton>
-            </InputGroup>
-            <Tabs
-                defaultValue={"информатика"}
-                onValueChange={(value) => setActiveTab(value as Theme)}
-            >
-                <TabsList className="mt-5 w-full">
-                    <TabsTrigger value={"информатика"}>
-                        <GitForkIcon ref={gitForkRef} />
-                        <span>Информатика</span>
-                    </TabsTrigger>
-                    <TabsTrigger value={"математика"}>
-                        <PlusIcon ref={plusRef} />
-                        <span>Математика</span>
-                    </TabsTrigger>
-                    <TabsTrigger value={"физика"}>
-                        <AtomIcon ref={atomRef} />
-                        <span>Физика</span>
-                    </TabsTrigger>
-                    <TabsTrigger value={"русский"}>
-                        <BookTextIcon ref={bookTextRef} />
-                        <span>Русский язык</span>
-                    </TabsTrigger>
-                </TabsList>
-                {themes.map((theme, i) => (
-                    <TabsContent value={theme} className="p-3" key={i}>
-                        {Array.from(
-                            new Set(tasks.filter(task => task.theme == theme).map((task) => task.subject)),
-                        ).map((subject) => (
-                            <Section
-                                key={subject}
-                                title={subject}
-                                tasks={tasks.filter(
-                                    (task) => task.subject === subject,
-                                )}
+            <div className="mt-4 w-full">
+                <div className="mb-4">
+                    <InputGroup>
+                        <InputGroupAddon>
+                            <Search className="h-4 w-4 text-muted-foreground" />
+                        </InputGroupAddon>
+                        <InputGroupInput>
+                            <Input
+                                placeholder="Найти задания"
+                                value={qSearch}
+                                onChange={(e) => setQSearch(e.target.value)}
+                                className="w-full"
                             />
+                        </InputGroupInput>
+                    </InputGroup>
+                </div>
+
+                {qSearch ? (
+                    <div className="space-y-3">
+                        {tasks
+                            .filter((t) => {
+                                const q = qSearch.toLowerCase()
+                                const title = (t.title || '').toString().toLowerCase()
+                                const text = (t.task_text || '').toString().toLowerCase()
+                                const subject = (t.subject || '').toString().toLowerCase()
+                                const theme = (t.theme || '').toString().toLowerCase()
+                                const difficulty = (t.difficulty || '').toString().toLowerCase()
+                                return title.includes(q) || text.includes(q) || subject.includes(q) || theme.includes(q) || difficulty.includes(q)
+                            })
+                            .map((t: any) => (
+                                <div key={t.id ?? t.task_id} className="p-3 border rounded flex justify-between items-start">
+                                    <div>
+                                        <div className="font-medium">{t.title}</div>
+                                        <div className="text-sm text-muted-foreground">{t.subject} — {t.theme}</div>
+                                        <div className="text-sm text-muted-foreground">{(t.task_text || '').slice(0, 200)}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button size="sm" onClick={() => router.push(`/task/${t.id ?? t.task_id}`)}>Открыть</Button>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                ) : (
+                    <Tabs
+                        defaultValue={"информатика"}
+                        onValueChange={(value) => setActiveTab(value as Theme)}
+                    >
+                        <TabsList className="mt-5 w-full">
+                            <TabsTrigger value={"информатика"}>
+                                <GitForkIcon ref={gitForkRef} />
+                                <span>Информатика</span>
+                            </TabsTrigger>
+                            <TabsTrigger value={"математика"}>
+                                <PlusIcon ref={plusRef} />
+                                <span>Математика</span>
+                            </TabsTrigger>
+                            <TabsTrigger value={"физика"}>
+                                <AtomIcon ref={atomRef} />
+                                <span>Физика</span>
+                            </TabsTrigger>
+                            <TabsTrigger value={"русский"}>
+                                <BookTextIcon ref={bookTextRef} />
+                                <span>Русский язык</span>
+                            </TabsTrigger>
+                        </TabsList>
+                        {themes.map((theme, i) => (
+                            <TabsContent value={theme} className="p-3" key={i}>
+                                {Array.from(
+                                    new Set(tasks.filter(task => task.theme == theme).map((task) => task.subject)),
+                                ).map((subject) => (
+                                    <Section
+                                        key={subject}
+                                        title={subject}
+                                        tasks={tasks.filter(
+                                            (task) => task.subject === subject,
+                                        )}
+                                    />
+                                ))}
+                            </TabsContent>
                         ))}
-                    </TabsContent>
-                ))}
-            </Tabs>
+                    </Tabs>
+                )}
+            </div>
         </section>
     );
 }

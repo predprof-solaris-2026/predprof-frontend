@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<any | null>(null)
   const [history, setHistory] = useState<any | null>(null)
+  const [historyLimit, setHistoryLimit] = useState<number>(10)
   const [oppRating, setOppRating] = useState<number | ''>('')
   const [prob, setProb] = useState<any | null>(null)
   const [projection, setProjection] = useState<any | null>(null)
@@ -111,26 +112,29 @@ export default function ProfilePage() {
       }
     }
 
-    const loadHistory = async (token?: string | null) => {
-      if (!token) return
-      try {
-        const resp: any = await getMyRatingHistoryApiRatingHistoryMeGet({ headers: { Authorization: `Bearer ${token}` } })
-        const data = resp?.data || resp
-        if (mounted) setHistory(data)
-      } catch (e) {
-        console.error('Failed to load history', e)
-      }
-    }
+    // loadHistory moved to fetchHistory outside so we can control limit
 
     tryLoad()
     // load stats and history
     const _token = getTokenFromCookie()
     if (storeUser?.id) loadStats(_token, String(storeUser.id))
     else if (_token) loadStats(_token)
-    if (_token) loadHistory(_token)
+    if (_token) fetchHistory(historyLimit)
 
     return () => { mounted = false }
-  }, [storeUser?.id, setStoreUser])
+  }, [storeUser?.id, setStoreUser, historyLimit])
+
+  const fetchHistory = async (limit = 10) => {
+    const token = getTokenFromCookie()
+    if (!token) return
+    try {
+      const resp: any = await getMyRatingHistoryApiRatingHistoryMeGet({ headers: { Authorization: `Bearer ${token}` }, query: { limit } })
+      const data = resp?.data || resp
+      setHistory(data)
+    } catch (e) {
+      console.error('Failed to load history', e)
+    }
+  }
 
   const initials = (u: any) => {
     if (!u) return "?"
@@ -269,7 +273,7 @@ export default function ProfilePage() {
                   config={{ rating: { label: 'Рейтинг', color: '#06b6d4' } }}
                   className="w-full h-full"
                 >
-                  {
+                    {
                     // prepare chart data: oldest -> newest
                     (() => {
                       const items = [...history.items].slice().reverse()
@@ -278,11 +282,38 @@ export default function ProfilePage() {
                         rating: (it.my_rating_before ?? 0) + (it.my_rating_delta ?? 0),
                       }))
 
+                      // compute adaptive Y domain for better visual scaling
+                      const ratings = data.map((d) => Number(d.rating) || 0)
+                      const minRating = Math.min(...ratings)
+                      const maxRating = Math.max(...ratings)
+                      let domainMin = Math.floor(minRating)
+                      let domainMax = Math.ceil(maxRating)
+
+                      // If all values equal, add small padding
+                      if (domainMax === domainMin) {
+                        domainMin = Math.max(0, domainMin - 30)
+                        domainMax = domainMax + 30
+                      }
+
+                      const span = Math.max(domainMax - domainMin, 1)
+                      const padding = Math.max(Math.round(span * 0.12), 25)
+                      // add extra top space so max rating is not flush to chart top
+                      const extraTop = Math.max(30, Math.round(span * 0.18), Math.round(maxRating * 0.02))
+                      domainMin = Math.max(0, Math.floor((domainMin - padding) / 10) * 10)
+                      domainMax = Math.ceil((domainMax + padding + extraTop) / 10) * 10
+
+                      // Ensure minimum visual span so tiny changes are visible
+                      if (domainMax - domainMin < 60) {
+                        const extra = Math.ceil((60 - (domainMax - domainMin)) / 2)
+                        domainMin = Math.max(0, domainMin - extra)
+                        domainMax = domainMax + extra
+                      }
+
                       return (
                         <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 6 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e6e6e6" />
                           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                          <YAxis tick={{ fontSize: 11 }} />
+                          <YAxis domain={[domainMin, domainMax]} tick={{ fontSize: 11 }} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Line type="monotone" dataKey="rating" stroke="var(--color-rating)" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                         </LineChart>
@@ -297,13 +328,30 @@ export default function ProfilePage() {
             <div className="grid gap-4">
               <h3 className="text-lg font-semibold">История матчей</h3>
               <div className="space-y-2">
-                {history.items.slice(0,10).map((it: any) => (
-                  <div key={it.match_id} className="p-3 border rounded flex items-center justify-between">
-                    <div className="text-sm">Против: {it.opponent_id ?? '—'}</div>
-                    <div className="text-sm">Рейтинг до: {it.my_rating_before} • Δ {it.my_rating_delta}</div>
-                    <div className="text-sm text-muted-foreground">{it.outcome || it.state}</div>
+                {history.items.map((it: any) => (
+                  <div key={it.match_id} className="p-3 border rounded flex items-center gap-4 relative">
+                    <div className="flex-1 min-w-0 pr-24">
+                      <div className="text-sm truncate">Против: {it.opponent?.first_name && it.opponent?.last_name ? `${it.opponent.first_name} ${it.opponent.last_name}` : it.opponent?.email ?? '—'}</div>
+                    </div>
+
+                    <div className="absolute left-1/2 transform -translate-x-1/2">
+                      <div className="text-sm text-center">Рейтинг до: {it.my_rating_before} • Δ {it.my_rating_delta}</div>
+                    </div>
+
+                    <div className="flex-none text-right text-sm text-muted-foreground whitespace-nowrap">
+                      {it.result || it.state}
+                    </div>
                   </div>
                 ))}
+                {history.items.length >= historyLimit && (
+                  <div className="pt-2">
+                    <Button variant="outline" onClick={async () => {
+                      const newLimit = historyLimit + 10
+                      setHistoryLimit(newLimit)
+                      await fetchHistory(newLimit)
+                    }}>Загрузить ещё</Button>
+                  </div>
+                )}
               </div>
             </div>
           )}

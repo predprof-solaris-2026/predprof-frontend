@@ -47,16 +47,28 @@ export default function PvpPage() {
   const lastSentAnswerRef = useRef<string | null>(null)
   const lastSentTaskIdRef = useRef<string | null>(null)
   const autoResentRef = useRef<boolean>(false)
+  const answerRef = useRef<string>("")
+  const closeWebSocket = (sendDisconnect = true) => {
+    try {
+      if (sendDisconnect) {
+        try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) { /* ignore */ }
+      }
+      try { wsRef.current?.close() } catch (e) { /* ignore */ }
+    } catch (e) {
+      console.error('Error while closing websocket', e)
+    } finally {
+      try { wsRef.current = null } catch (e) { /* ignore */ }
+    }
+  }
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   useEffect(() => {
     return () => {
-      if (wsRef.current) {
-        try { wsRef.current.close() } catch {}
-        wsRef.current = null
-      }
+      try { closeWebSocket(false) } catch (e) { /* ignore */ }
+      // clear any timers on unmount
+      clearAnswerWatchdog()
     }
   }, [])
 
@@ -159,6 +171,20 @@ export default function PvpPage() {
 
   const handleMessage = (msg: any) => {
     switch (msg.type) {
+      case 'state_update': {
+        // { type: 'state_update', round, rounds_total, p1, p2 }
+        try {
+          const p1 = msg.p1 || {}
+          const p2 = msg.p2 || {}
+          const myId = user?.id
+          const me = p1.user_id === myId ? p1 : p2.user_id === myId ? p2 : null
+          const opp = me === p1 ? p2 : me === p2 ? p1 : null
+          if (me && opp) {
+            // timer functionality removed
+          }
+        } catch (e) { console.error('state_update handling failed', e) }
+        break
+      }
       case 'queued':
         setStatus('queued')
         setQueueMessage(msg.message || 'Поиск противника...')
@@ -169,6 +195,7 @@ export default function PvpPage() {
         try { clearTokenCookie() } catch {}
         try { (useUserStore as any).getState().clear() } catch {}
         try { router.push('/login') } catch {}
+        try { closeWebSocket() } catch (e) { /* ignore */ }
         break
       case 'canceled':
         setStatus('idle')
@@ -216,9 +243,7 @@ export default function PvpPage() {
             console.error('Server paired user with themself', p1id)
             toast({ title: 'Ошибка матча', description: 'Сервер подобрал матч с самим собой — попытка отменена', variant: 'destructive' })
             // disconnect and reset
-            try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) {}
-            try { wsRef.current?.close() } catch (e) {}
-            wsRef.current = null
+            try { closeWebSocket() } catch (e) {}
             setStatus('idle')
             setRound(0)
             setTask(null)
@@ -249,10 +274,7 @@ export default function PvpPage() {
         lastSentAnswerRef.current = null
         lastSentTaskIdRef.current = null
         autoResentRef.current = false
-          try {
-            wsRef.current?.close()
-          } catch (e) { console.error(e) }
-          try { wsRef.current = null } catch {}
+          try { closeWebSocket() } catch (e) { console.error(e) }
         break
       case 'finished':
         // Guard: avoid self-match
@@ -262,9 +284,7 @@ export default function PvpPage() {
           if (p1id && p2id && p1id === p2id) {
             console.error('Server finished match with same user', p1id)
             toast({ title: 'Ошибка матча', description: 'Сервер завершил матч с самим собой — попытка отменена', variant: 'destructive' })
-            try { wsRef.current?.send(JSON.stringify({ type: 'disconnect' })) } catch (e) {}
-            try { wsRef.current?.close() } catch (e) {}
-            wsRef.current = null
+            try { closeWebSocket() } catch (e) {}
             setStatus('idle')
             setRound(0)
             setTask(null)
@@ -286,14 +306,8 @@ export default function PvpPage() {
         lastSentAnswerRef.current = null
         lastSentTaskIdRef.current = null
         autoResentRef.current = false
-          try {
-            wsRef.current?.send(JSON.stringify({ type: 'disconnect' }))
-          } catch (e) { console.error(e) }
-          try {
-            wsRef.current?.close()
-          } catch (e) { console.error(e) }
-          try { wsRef.current = null } catch {}
-        break
+          try { closeWebSocket() } catch (e) { console.error(e) }
+            break
       default:
         break
     }
@@ -326,14 +340,7 @@ export default function PvpPage() {
   }
 
   const cancelQueue = () => {
-    try {
-      // inform server about disconnect
-      wsRef.current?.send(JSON.stringify({ type: 'disconnect' }))
-    } catch (e) { console.error(e) }
-    try {
-      wsRef.current?.close()
-    } catch (e) { console.error(e) }
-    wsRef.current = null
+    try { closeWebSocket() } catch (e) { console.error(e) }
     setStatus('idle')
     setQueueMessage(null)
     setQueueSize(null)
@@ -342,9 +349,11 @@ export default function PvpPage() {
     lastTaskIdRef.current = null
     setLastAnswerReceived(null)
     clearAnswerWatchdog()
+    
   }
 
   const submitAnswer = async () => {
+    // clear opponent auto-send timer when user actively submits
     if (!task || !answer) return
     setSubmitting(true)
     try {
@@ -444,6 +453,7 @@ export default function PvpPage() {
 
             {status === 'in_match' && task && (
               <div className="space-y-6 animate-in zoom-in-95 duration-300">
+                {/* countdown moved to Sonner toast */}
                 <div className="flex items-center justify-between gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="flex items-center gap-3">
                     <Star className="h-5 w-5 text-yellow-500 fill-current" />
@@ -464,7 +474,7 @@ export default function PvpPage() {
                     <Input 
                       id="answer"
                       value={answer} 
-                      onChange={(e) => setAnswer(e.target.value)} 
+                      onChange={(e) => { setAnswer(e.target.value); answerRef.current = e.target.value; }} 
                       disabled={waitingForNext}
                       placeholder="Введите решение здесь..." 
                       className="h-12 text-lg"
@@ -482,7 +492,7 @@ export default function PvpPage() {
                   </div>
                   {lastAnswerReceived && (
                     <div className={cn("mt-2 text-sm p-2 rounded-md", lastAnswerReceived.counted ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50')}>
-                      {lastAnswerReceived.counted ? 'Ответ записан' : `Ответ не засчитан — ${lastAnswerReceived.message}`}
+                      {lastAnswerReceived.counted ? 'Ответ записан, ждем соперника...' : `Ответ не засчитан — ${lastAnswerReceived.message}`}
                     </div>
                   )}
                 </div>

@@ -52,6 +52,7 @@ export default function RootLayout({
                                 </div>
                             </div>
                         </footer>
+                        {/* Sonner Toaster removed */}
                     </ToastProvider>
                 </ThemeProvider>
             </body>

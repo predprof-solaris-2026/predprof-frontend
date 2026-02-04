@@ -139,10 +139,7 @@ export type MatchHistoryItem = {
      * Match Id
      */
     match_id: string;
-    /**
-     * Opponent Id
-     */
-    opponent_id: string | null;
+    opponent: UserPublic;
     /**
      * My Rating Before
      */
@@ -152,9 +149,9 @@ export type MatchHistoryItem = {
      */
     my_rating_delta: number;
     /**
-     * Outcome
+     * Result
      */
-    outcome?: string | null;
+    result?: string | null;
     /**
      * State
      */

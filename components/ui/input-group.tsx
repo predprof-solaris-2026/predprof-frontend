@@ -128,10 +128,8 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function InputGroupInput({
-  className,
-  ...props
-}: React.ComponentProps<"input">) {
+function InputGroupInput({ className, children, ...props }: React.ComponentProps<"input">) {
+  // strip `children` to avoid passing them to the underlying <input /> (void element)
   return (
     <Input
       data-slot="input-group-control"
