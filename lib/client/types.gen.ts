@@ -69,9 +69,33 @@ export type CheckAnswer = {
 };
 
 /**
+ * CheckResponse
+ */
+export type CheckResponse = {
+    /**
+     * Correct
+     */
+    correct: boolean;
+};
+
+/**
  * Difficulty
  */
 export type Difficulty = 'лёгкий' | 'средний' | 'сложный';
+
+/**
+ * DifficultyRecommendation
+ */
+export type DifficultyRecommendation = {
+    /**
+     * Difficulty
+     */
+    difficulty: string;
+    /**
+     * Recommendation
+     */
+    recommendation: string;
+};
 
 /**
  * GenerateTaskRequest
@@ -101,6 +125,16 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * HintResponse
+ */
+export type HintResponse = {
+    /**
+     * Hint
+     */
+    hint: string | null;
 };
 
 /**
@@ -198,6 +232,44 @@ export type MatchHistoryResponse = {
      * Limit
      */
     limit: number;
+};
+
+/**
+ * PersonalRecommendation
+ */
+export type PersonalRecommendation = {
+    /**
+     * Theme
+     */
+    theme: string;
+    /**
+     * Difficulty
+     */
+    difficulty: string;
+    /**
+     * Reason
+     */
+    reason: string;
+    /**
+     * Priority
+     *
+     * 5 - самый высокий приоритет, 1 - низкий
+     */
+    priority: number;
+    /**
+     * Estimated Time Sec
+     */
+    estimated_time_sec?: number;
+};
+
+/**
+ * PlanResponse
+ */
+export type PlanResponse = {
+    /**
+     * Recommendations
+     */
+    recommendations: Array<PersonalRecommendation>;
 };
 
 /**
@@ -403,6 +475,28 @@ export type StatsTrainingByThemeItem = {
 };
 
 /**
+ * TaskRecommendation
+ */
+export type TaskRecommendation = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Theme
+     */
+    theme?: string | null;
+    /**
+     * Difficulty
+     */
+    difficulty?: string | null;
+    /**
+     * Reason
+     */
+    reason?: string | null;
+};
+
+/**
  * TaskSchema
  */
 export type TaskSchema = {
@@ -474,6 +568,20 @@ export type TaskSchemaRequest = {
  * Theme
  */
 export type Theme = 'математика' | 'русский' | 'информатика' | 'физика';
+
+/**
+ * ThemeResponse
+ */
+export type ThemeResponse = {
+    /**
+     * Theme
+     */
+    theme: string;
+    /**
+     * Recommendations
+     */
+    recommendations: Array<DifficultyRecommendation>;
+};
 
 /**
  * Token
@@ -1200,8 +1308,10 @@ export type GetTaskHintApiTrainingTaskTaskIdHintGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: HintResponse;
 };
+
+export type GetTaskHintApiTrainingTaskTaskIdHintGetResponse = GetTaskHintApiTrainingTaskTaskIdHintGetResponses[keyof GetTaskHintApiTrainingTaskTaskIdHintGetResponses];
 
 export type CheckAnswerApiTrainingTaskTaskIdCheckPostData = {
     body: CheckAnswer;
@@ -1228,8 +1338,71 @@ export type CheckAnswerApiTrainingTaskTaskIdCheckPostResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: CheckResponse;
 };
+
+export type CheckAnswerApiTrainingTaskTaskIdCheckPostResponse = CheckAnswerApiTrainingTaskTaskIdCheckPostResponses[keyof CheckAnswerApiTrainingTaskTaskIdCheckPostResponses];
+
+export type GetAdaptivePlanApiTrainingPlanGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/training/plan';
+};
+
+export type GetAdaptivePlanApiTrainingPlanGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlanResponse;
+};
+
+export type GetAdaptivePlanApiTrainingPlanGetResponse = GetAdaptivePlanApiTrainingPlanGetResponses[keyof GetAdaptivePlanApiTrainingPlanGetResponses];
+
+export type GetNextTaskRecommendationApiTrainingRecommendedTaskGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/training/recommended-task';
+};
+
+export type GetNextTaskRecommendationApiTrainingRecommendedTaskGetResponses = {
+    /**
+     * Response Get Next Task Recommendation Api Training Recommended Task Get
+     *
+     * Successful Response
+     */
+    200: TaskRecommendation | null;
+};
+
+export type GetNextTaskRecommendationApiTrainingRecommendedTaskGetResponse = GetNextTaskRecommendationApiTrainingRecommendedTaskGetResponses[keyof GetNextTaskRecommendationApiTrainingRecommendedTaskGetResponses];
+
+export type GetThemeAnalysisApiTrainingThemeThemeGetData = {
+    body?: never;
+    path: {
+        theme: Theme;
+    };
+    query?: never;
+    url: '/api/training/theme/{theme}';
+};
+
+export type GetThemeAnalysisApiTrainingThemeThemeGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetThemeAnalysisApiTrainingThemeThemeGetError = GetThemeAnalysisApiTrainingThemeThemeGetErrors[keyof GetThemeAnalysisApiTrainingThemeThemeGetErrors];
+
+export type GetThemeAnalysisApiTrainingThemeThemeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: ThemeResponse;
+};
+
+export type GetThemeAnalysisApiTrainingThemeThemeGetResponse = GetThemeAnalysisApiTrainingThemeThemeGetResponses[keyof GetThemeAnalysisApiTrainingThemeThemeGetResponses];
 
 export type GetMyStatsApiStatsMeGetData = {
     body?: never;

@@ -29,7 +29,7 @@ export default function Header() {
     };
 
     return (
-        <header className="w-full flex justify-between px-5 py-3 items-center z-20">
+        <header className="w-full flex justify-between px-5 py-3 items-center z-20 max-w-7xl">
             <div className="flex items-center gap-4">
                 <Link href="/">
                     <Image

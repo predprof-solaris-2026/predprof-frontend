@@ -16,6 +16,8 @@ import {
   deleteTaskApiTasksTaskIdDelete,
   getTasksToJsonApiTasksExportGet,
   postTasksApiTasksUploadImportJsonPost,
+  getTasksToCsvApiTasksExportCsvGet,
+  importTasksApiTasksUploadImportCsvPost,
   getAllUsersApiUserGet,
   getUserStatsApiStatsUsersUserIdGet,
   checkRoleApiAuthRolePost
@@ -45,6 +47,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<AdminTask | null>(null)
   const [jsonFile, setJsonFile] = useState<File | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
   const { toast } = useToast()
   
   // Filters
@@ -176,6 +179,34 @@ export default function AdminPage() {
     }
   }
 
+  const handleExportCsv = async () => {
+    try {
+      const resp: unknown = await getTasksToCsvApiTasksExportCsvGet()
+      const data = resp && typeof resp === "object" && "data" in (resp as Record<string, unknown>) ? (resp as Record<string, unknown>).data : resp
+      const blob = new Blob([String(data ?? '')], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'tasks.csv'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      toast({ title: 'Ошибка экспорта CSV', variant: 'destructive' })
+    }
+  }
+
+  const handleImportCsv = async () => {
+    if (!csvFile) return toast({ title: 'Выберите CSV файл', variant: 'destructive' })
+    try {
+      await importTasksApiTasksUploadImportCsvPost({ body: { file: csvFile } })
+      toast({ title: 'CSV импорт завершён', variant: 'success' })
+      loadTasks()
+    } catch (e: unknown) {
+      const msg = typeof e === "object" && e !== null && "message" in e ? String((e as Record<string, unknown>).message) : String(e)
+      toast({ title: msg || "Ошибка импорта CSV", variant: "destructive" })
+    }
+  }
+
   if (isAdmin === null) return <div className="p-4">Проверка...</div>
   if (!isAdmin) {
     return (
@@ -242,7 +273,7 @@ export default function AdminPage() {
               </div>
               <div className="col-span-1 md:col-span-2 space-y-2">
                 <Label>Условие</Label>
-                <Textarea className="min-h-[100px]" value={selected?.task_text || ''} onChange={(e) => setSelected({ ...selected, task_text: e.target.value })} />
+                <Textarea className="min-h-25" value={selected?.task_text || ''} onChange={(e) => setSelected({ ...selected, task_text: e.target.value })} />
               </div>
               <div className="space-y-2">
                 <Label>Подсказка</Label>
@@ -268,14 +299,24 @@ export default function AdminPage() {
                 <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
                     <Download className="mr-2 h-4 w-4"/> Экспорт
                 </Button>
+                <Button onClick={handleExportCsv} variant="outline" className="w-full sm:w-auto">
+                    <Download className="mr-2 h-4 w-4"/> Экспорт CSV
+                </Button>
                 
-                {/* Скрытый инпут файла */}
+                {/* Скрытые инпуты файлов */}
                 <Input
                   id="jsonFileInput"
                   type="file"
                   accept="application/json"
                   className="hidden"
                   onChange={(e) => setJsonFile(e.currentTarget.files?.[0] ?? null)}
+                />
+                <Input
+                  id="csvFileInput"
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => setCsvFile(e.currentTarget.files?.[0] ?? null)}
                 />
                 
                 <div className="flex gap-2 w-full sm:w-auto">
@@ -285,7 +326,16 @@ export default function AdminPage() {
                         <span className="truncate">{jsonFile ? jsonFile.name : 'Выбрать JSON'}</span>
                         </label>
                     </Button>
+                    <Button variant="secondary" className="w-full sm:w-auto flex-1 truncate" asChild>
+                        <label htmlFor="csvFileInput" className="cursor-pointer flex items-center justify-center">
+                        <FileJson className="mr-2 h-4 w-4 shrink-0"/>
+                        <span className="truncate">{csvFile ? csvFile.name : 'Выбрать CSV'}</span>
+                        </label>
+                    </Button>
                     <Button onClick={handleImport} className="shrink-0">
+                        <Upload className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={handleImportCsv} className="shrink-0">
                         <Upload className="h-4 w-4" />
                     </Button>
                 </div>
@@ -409,7 +459,7 @@ function UsersAdmin() {
       
       {/* COLUMN 1: USERS LIST */}
       {/* На мобильном скрываем список, если выбран пользователь. На десктопе (md) показываем всегда. */}
-      <div className={`col-span-1 border-r h-full flex flex-col ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`col-span-1 border-r h-full flex flex-col min-h-0 ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b bg-muted/10">
             <h3 className="text-lg font-semibold">Пользователи ({users.length})</h3>
         </div>

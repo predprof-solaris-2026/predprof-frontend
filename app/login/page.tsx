@@ -62,11 +62,65 @@ export default function LoginPage() {
         router.push("/profile")
         return
       } else {
-        setError("Не удалось получить токен после регистрации")
+        // Try to extract error details from response
+        const maybeErr = loginData as unknown as Record<string, unknown> | string | null
+        const extract = () => {
+          if (!maybeErr) return "Не удалось получить токен после регистрации"
+          if (typeof maybeErr === "string") return maybeErr
+          if ("error" in maybeErr) {
+            const eVal = (maybeErr as Record<string, unknown>).error as unknown
+            if (!eVal) return "Не удалось получить токен после регистрации"
+            if (typeof eVal === "string") return eVal
+            if (typeof eVal === "object" && eVal !== null) {
+              const eObj = eVal as Record<string, unknown>
+              if ("detail" in eObj) return String(eObj.detail)
+              if ("message" in eObj) return String(eObj.message)
+            }
+          }
+          if ("message" in maybeErr) return String((maybeErr as Record<string, unknown>).message)
+          if ("detail" in maybeErr) {
+            const d = (maybeErr as Record<string, unknown>).detail
+            if (Array.isArray(d) && d.length > 0) {
+              const first = d[0]
+              if (first?.msg) return String(first.msg)
+              if (first?.message) return String(first.message)
+            }
+            return String(d)
+          }
+          return "Не удалось получить токен после регистрации"
+        }
+        setError(extract())
       }
     } catch (e: unknown) {
-      const msg = typeof e === "object" && e !== null && "message" in e ? String((e as Record<string, unknown>).message) : String(e)
-      setError(msg || "Ошибка регистрации")
+      // Parse server error details if present
+      const parse = () => {
+        try {
+          if (!e) return "Ошибка регистрации"
+          if (typeof e === "string") return e
+          const rec = e as Record<string, unknown>
+          if ("error" in rec) {
+            const errVal = (rec as Record<string, unknown>).error as unknown
+            if (typeof errVal === "string") return errVal
+            if (typeof errVal === "object" && errVal !== null) {
+              const errObj = errVal as Record<string, unknown>
+              if ("detail" in errObj) return String(errObj.detail)
+              if ("message" in errObj) return String(errObj.message)
+            }
+          }
+          if ("message" in rec) return String(rec.message)
+          if ("detail" in rec) {
+            const d = rec.detail
+            if (Array.isArray(d) && d.length > 0) {
+              const first = d[0] as Record<string, unknown>
+              if (first?.msg) return String(first.msg)
+              if (first?.message) return String(first.message)
+            }
+            return String(d)
+          }
+          return String(e)
+        } catch { return "Ошибка регистрации" }
+      }
+      setError(parse())
     } finally {
       setLoading(false)
     }
@@ -89,10 +143,68 @@ export default function LoginPage() {
         if (u) setUser(u as unknown as LocalUser)
         router.push("/profile")
         return
+      } else {
+        // No token — try to extract server error details from the response body
+        const rec = data as unknown as Record<string, unknown> | string | null
+        if (!rec) {
+          setError("Не удалось авторизоваться")
+        } else if (typeof rec === "string") {
+          setError(rec)
+        } else if ("error" in rec) {
+          const errVal = (rec as Record<string, unknown>).error as unknown
+          if (typeof errVal === "string") setError(errVal)
+          else if (typeof errVal === "object" && errVal !== null) {
+            const errObj = errVal as Record<string, unknown>
+            if ("detail" in errObj) setError(String(errObj.detail))
+            else if ("message" in errObj) setError(String(errObj.message))
+            else setError("Не удалось авторизоваться")
+          } else {
+            setError("Не удалось авторизоваться")
+          }
+        } else if ("message" in rec) {
+          setError(String((rec as Record<string, unknown>).message))
+        } else if ("detail" in rec) {
+          const d = (rec as Record<string, unknown>).detail
+          if (Array.isArray(d) && d.length > 0) {
+            const first = d[0] as Record<string, unknown>
+            setError(String(first?.msg ?? first?.message ?? JSON.stringify(first)))
+          } else {
+            setError(String(d))
+          }
+        } else {
+          setError("Не удалось авторизоваться")
+        }
       }
     } catch (e: unknown) {
-      const msg = typeof e === "object" && e !== null && "message" in e ? String((e as Record<string, unknown>).message) : String(e)
-      setError(msg || "Ошибка входа")
+      // Parse server error details if present
+      const parse = () => {
+        try {
+          if (!e) return "Ошибка входа"
+          if (typeof e === "string") return e
+          const rec = e as Record<string, unknown>
+          if ("error" in rec) {
+            const errVal = (rec as Record<string, unknown>).error as unknown
+            if (typeof errVal === "string") return errVal
+            if (typeof errVal === "object" && errVal !== null) {
+              const errObj = errVal as Record<string, unknown>
+              if ("detail" in errObj) return String(errObj.detail)
+              if ("message" in errObj) return String(errObj.message)
+            }
+          }
+          if ("message" in rec) return String(rec.message)
+          if ("detail" in rec) {
+            const d = rec.detail
+            if (Array.isArray(d) && d.length > 0) {
+              const first = d[0] as Record<string, unknown>
+              if (first?.msg) return String(first.msg)
+              if (first?.message) return String(first.message)
+            }
+            return String(d)
+          }
+          return String(e)
+        } catch { return "Ошибка входа" }
+      }
+      setError(parse())
     } finally {
       setLoading(false)
     }

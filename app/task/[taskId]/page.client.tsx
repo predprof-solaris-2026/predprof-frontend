@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { TaskSchema, Theme as GenTheme, Difficulty as GenDifficulty } from "@/lib/client";
 import { generateTaskViaGigachatApiTasksGeneratePost } from '@/lib/client';
+import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
 import { checkAnswer, requestHint } from "@/app/actions";
@@ -93,6 +94,14 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
         setIsCorrect(null);
         try {
             const result = await checkAnswer(answer, task ? task.id : "", token ?? null);
+            // If server returned an error object (e.g. unauthorized), show sonner and stop
+            const _resCheck = result as unknown as Record<string, unknown>;
+            const msg = result?.message ?? "";
+            const unauthRe = /(not authenticated|not authorized|unauth|401|не авториз|неавториз|no autorizado)/i;
+            if ((_resCheck && "error" in _resCheck) || (typeof msg === "string" && unauthRe.test(msg))) {
+                toast.error("Вы не авторизованы");
+                return;
+            }
             const correct = Boolean(result?.correct);
             
             setIsCorrect(correct);
@@ -120,6 +129,12 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
         setHint(null);
         try {
             const res = await requestHint(task.id, token ?? null);
+            // If server returned error payload, show sonner for unauthorized
+            const _hintCheck = res as unknown as Record<string, unknown>;
+            if (_hintCheck && "error" in _hintCheck) {
+                toast.error("Вы не авторизованы");
+                return;
+            }
             if (res.hint) setHint(res.hint);
             else setHint(res.error ?? 'Нет подсказки');
         } finally {
@@ -139,6 +154,12 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                 headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                 body,
             });
+            // If server returned an error object (instead of data), show sonner and stop
+            const _genCheck = resp as unknown as Record<string, unknown>;
+            if (_genCheck && "error" in _genCheck) {
+                toast.error("Вы не авторизованы");
+                return;
+            }
             const data: unknown = (resp as Record<string, unknown>)?.data ?? resp;
             const newTask: TaskSchema = data as TaskSchema;
 
@@ -239,6 +260,30 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                 >
                     {loadingGenerate ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="size-5" />}
                 </Button>
+                {/* Сброс прогресса (показываем только если более одного задания) */}
+                {trainingList && trainingList.length > 1 && (
+                    <Button
+                        className="ml-2 rounded-lg"
+                        variant="outline"
+                        onClick={() => {
+                            if (!confirm('Сбросить прогресс? Все задания и прогресс будут очищены, текущая задача останется первой.')) return
+                            try {
+                                const curId = task?.id ? String(task.id) : null
+                                const newList = curId ? [task as TaskSchema] : []
+                                localStorage.setItem('trainingList', JSON.stringify(newList))
+                                localStorage.removeItem('trainingProgress')
+                                setTrainingList(newList)
+                                setTrainingProgress({})
+                                toast.success('Прогресс сброшен')
+                            } catch (e) {
+                                console.error('Reset progress failed', e)
+                                toast.error('Не удалось сбросить прогресс')
+                            }
+                        }}
+                    >
+                        Сбросить прогресс
+                    </Button>
+                )}
             </nav>
 
             {/* Контент задания */}

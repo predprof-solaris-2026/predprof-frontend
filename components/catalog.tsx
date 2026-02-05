@@ -11,7 +11,6 @@ import {
     InputGroup,
     InputGroupAddon,
     InputGroupInput,
-    InputGroupButton,
 } from "@/components/ui/input-group";
 import { Search } from "lucide-react";
 import { GitForkIcon, type GitForkIconHandle } from "@/components/ui/git-fork";
@@ -52,8 +51,8 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
     const [selSubject, setSelSubject] = useState<string>("all");
     const [selTheme, setSelTheme] = useState<string>("all");
     const [selDifficulty, setSelDifficulty] = useState<string>("all");
-    const [limit, setLimit] = useState<number>(10);
-    const [skip, setSkip] = useState<number>(0);
+    const [limit, setLimit] = useState<string>("10");
+    const [skip, setSkip] = useState<string>("0");
     const gitForkRef = useRef<GitForkIconHandle>(null);
     const plusRef = useRef<PlusIconHandle>(null);
     const atomRef = useRef<AtomIconHandle>(null);
@@ -89,7 +88,7 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
             ) {
                 localStorage.setItem(key, JSON.stringify(value));
             }
-        } catch (e) {
+        } catch {
             console.warn(`localStorage set failed for ${key}`);
         }
     };
@@ -163,7 +162,16 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                             min={1}
                             max={100}
                             value={limit}
-                            onChange={(e) => setLimit(Number(e.target.value))}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                // allow empty string so input can be cleared
+                                if (v === "") {
+                                    setLimit("")
+                                } else {
+                                    // keep numeric string
+                                    setLimit(String(Number(v)));
+                                }
+                            }}
                         />
                     </div>
                     <div>
@@ -173,7 +181,11 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                             type="number"
                             min={0}
                             value={skip}
-                            onChange={(e) => setSkip(Number(e.target.value))}
+                            onChange={(e) => {
+                                const v = e.target.value
+                                if (v === "") setSkip("")
+                                else setSkip(String(Number(v)))
+                            }}
                         />
                     </div>
                 </div>
@@ -189,8 +201,8 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                                     q.theme = selTheme;
                                 if (selDifficulty && selDifficulty !== "all")
                                     q.difficulty = selDifficulty;
-                                q.limit = limit ?? 10;
-                                q.skip = skip ?? 0;
+                                q.limit = Number(limit) || 10;
+                                q.skip = Number(skip) || 0;
 
                                 const resp: unknown =
                                     await getTasksApiTrainingGet({ query: q });
