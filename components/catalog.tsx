@@ -164,11 +164,11 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                             value={limit}
                             onChange={(e) => {
                                 const v = e.target.value;
-                                // allow empty string so input can be cleared
+                                
                                 if (v === "") {
                                     setLimit("")
                                 } else {
-                                    // keep numeric string
+                                    
                                     setLimit(String(Number(v)));
                                 }
                             }}
@@ -324,7 +324,7 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
                         defaultValue={"информатика"}
                         onValueChange={(value) => setActiveTab(value as Theme)}
                     >
-                        <TabsList className="mt-5 w-full overflow-x-scroll overflow-y-hidden lg:overflow-x-hidden pl-25 lg:pl-0">
+                        <TabsList className="mt-5 w-full overflow-x-scroll overflow-y-hidden lg:overflow-x-hidden pl-26 lg:pl-1">
                             <TabsTrigger value={"информатика"}>
                                 <GitForkIcon ref={gitForkRef} />
                                 <span>Информатика</span>

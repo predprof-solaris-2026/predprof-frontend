@@ -131,16 +131,15 @@ export default function PvpPage() {
   const startAnswerWatchdog = () => {
     clearAnswerWatchdog()
     setWaitingForNext(true)
-    // if no next task or match_result arrives in 6s, try auto-resend last answer once,
-    // otherwise clear waiting state
+    
     answerWatchdogRef.current = window.setTimeout(() => {
-      // attempt one automatic resend if possible
+      
       if (lastSentAnswerRef.current && !autoResentRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         try {
           wsRef.current.send(JSON.stringify({ type: 'answer', answer: lastSentAnswerRef.current }))
           autoResentRef.current = true
           console.warn('Auto-resending last answer due to watchdog timeout')
-          // keep waiting state and restart watchdog for one more interval
+          
           setWaitingForNext(true)
           answerWatchdogRef.current = window.setTimeout(() => {
             setWaitingForNext(false)
@@ -181,7 +180,7 @@ export default function PvpPage() {
             | null;
           const opp = me === p1 ? p2 : me === p2 ? p1 : null;
           if (me && opp) {
-            // no-op
+            
           }
         } catch (e) {
            
@@ -200,7 +199,6 @@ export default function PvpPage() {
           clearTokenCookie();
         } catch {}
         try {
-          // Some stores expose getState; apply defensively
           // @ts-ignore
           if (typeof useUserStore.getState === "function") useUserStore.getState().clear();
         } catch {}
@@ -210,7 +208,7 @@ export default function PvpPage() {
         try {
           closeWebSocket();
         } catch (e) {
-          // ignore
+          
         }
         break;
       }
@@ -357,16 +355,13 @@ export default function PvpPage() {
 
   const joinQueue = () => {
     setLoading(true)
-    // If socket exists, ensure we send auth again so server will (re)queue the user.
-    // - if OPEN: send auth immediately
-    // - if CONNECTING: do nothing (connect() already will send auth onopen)
-    // - otherwise: create new connection
+    
     try {
       if (wsRef.current) {
         if (wsRef.current.readyState === WebSocket.OPEN) {
           wsRef.current.send(JSON.stringify({ type: 'bearer', token }))
         } else if (wsRef.current.readyState === WebSocket.CONNECTING) {
-          // already connecting, onopen handler will send bearer
+          
         } else {
           connect()
         }
@@ -395,7 +390,7 @@ export default function PvpPage() {
   }
 
   const submitAnswer = async () => {
-    // clear opponent auto-send timer when user actively submits
+    
     if (!task || !answer) return
     setSubmitting(true)
     try {
@@ -404,7 +399,7 @@ export default function PvpPage() {
       console.error(e)
     }
     setSubmitting(false)
-    // start watchdog immediately after submitting to avoid UI hang
+    
     startAnswerWatchdog()
   }
 

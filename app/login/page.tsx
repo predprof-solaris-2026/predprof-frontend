@@ -62,7 +62,7 @@ export default function LoginPage() {
         router.push("/profile")
         return
       } else {
-        // Try to extract error details from response
+      
         const maybeErr = loginData as unknown as Record<string, unknown> | string | null
         const extract = () => {
           if (!maybeErr) return "Не удалось получить токен после регистрации"
@@ -92,7 +92,7 @@ export default function LoginPage() {
         setError(extract())
       }
     } catch (e: unknown) {
-      // Parse server error details if present
+      
       const parse = () => {
         try {
           if (!e) return "Ошибка регистрации"
@@ -144,7 +144,7 @@ export default function LoginPage() {
         router.push("/profile")
         return
       } else {
-        // No token — try to extract server error details from the response body
+      
         const rec = data as unknown as Record<string, unknown> | string | null
         if (!rec) {
           setError("Не удалось авторизоваться")
@@ -176,7 +176,7 @@ export default function LoginPage() {
         }
       }
     } catch (e: unknown) {
-      // Parse server error details if present
+      
       const parse = () => {
         try {
           if (!e) return "Ошибка входа"

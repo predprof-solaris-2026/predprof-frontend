@@ -147,7 +147,7 @@ export default function ProfilePage() {
     
 
     tryLoad()
-    // load stats and history
+    
     const _token = getTokenFromCookie()
     if (storeUser?.id) loadStats(_token, String(storeUser.id))
     else if (_token) loadStats(_token)
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                   className="w-full h-full"
                 >
                     {
-                    // prepare chart data: oldest -> newest
+                    
                     (() => {
                       const items = [...(history?.items ?? [])].slice().reverse() as HistoryItem[]
                       const data = items.map((it: HistoryItem, idx: number) => ({
@@ -298,14 +298,14 @@ export default function ProfilePage() {
                         rating: (it.my_rating_before ?? 0) + (it.my_rating_delta ?? 0),
                       }))
 
-                      // compute adaptive Y domain for better visual scaling
+                      
                       const ratings = data.map((d) => Number(d.rating) || 0)
                       const minRating = Math.min(...ratings)
                       const maxRating = Math.max(...ratings)
                       let domainMin = Math.floor(minRating)
                       let domainMax = Math.ceil(maxRating)
 
-                      // If all values equal, add small padding
+                      
                       if (domainMax === domainMin) {
                         domainMin = Math.max(0, domainMin - 30)
                         domainMax = domainMax + 30
@@ -313,12 +313,12 @@ export default function ProfilePage() {
 
                       const span = Math.max(domainMax - domainMin, 1)
                       const padding = Math.max(Math.round(span * 0.12), 25)
-                      // add extra top space so max rating is not flush to chart top
+                      
                       const extraTop = Math.max(30, Math.round(span * 0.18), Math.round(maxRating * 0.02))
                       domainMin = Math.max(0, Math.floor((domainMin - padding) / 10) * 10)
                       domainMax = Math.ceil((domainMax + padding + extraTop) / 10) * 10
 
-                      // Ensure minimum visual span so tiny changes are visible
+                      
                       if (domainMax - domainMin < 60) {
                         const extra = Math.ceil((60 - (domainMax - domainMin)) / 2)
                         domainMin = Math.max(0, domainMin - extra)
