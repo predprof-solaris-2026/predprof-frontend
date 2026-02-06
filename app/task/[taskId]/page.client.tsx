@@ -188,6 +188,7 @@ export default function TaskPageClient({ task }: { task: TaskSchema | null }) {
                     setTrainingList(newList)
                     setTrainingProgress({})
                     toast.success('Прогресс сброшен')
+                    router.push('/');
                   } catch (e) {
                     console.error('Reset progress failed', e)
                     toast.error('Не удалось сбросить прогресс')

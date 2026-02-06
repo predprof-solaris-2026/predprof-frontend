@@ -14,10 +14,10 @@ export default async function Home() {
     const recResp = await getNextTaskRecommendationApiTrainingRecommendedTaskGet(token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
     let rec: TaskRecommendation | null = null;
     const recObj = recResp as unknown as Record<string, unknown>;
+    console.log(recObj);
     if (recObj && "data" in recObj) {
         rec = recObj.data as TaskRecommendation | null;
     } else if (recObj && "error" in recObj) {
-        console.log(recObj.error);
         rec = null;
     } else {
         rec = recResp as unknown as TaskRecommendation | null;

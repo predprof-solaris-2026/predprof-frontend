@@ -82,7 +82,7 @@ export default function TaskNav({
 
       {trainingList && trainingList.length > 1 && (
         <Button className="ml-2 rounded-lg" variant="outline" onClick={onResetProgress}>
-          Сбросить прогресс
+          Выйти с тренировки
         </Button>
       )}
     </nav>
