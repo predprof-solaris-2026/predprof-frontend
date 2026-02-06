@@ -516,6 +516,7 @@ export default function PvpPage() {
                       placeholder="Введите решение здесь..." 
                       className="h-12 text-lg"
                       onKeyDown={(e) => e.key === 'Enter' && submitAnswer()}
+                      autoComplete={'off'}
                     />
                     <Button 
                       size="lg" 
