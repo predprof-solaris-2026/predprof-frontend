@@ -1,17 +1,32 @@
 import { TrendingUpIcon } from "@/components/ui/trending-up";
 import { HeroBlock } from "@/components/hero";
 import { Catalog } from "@/components/catalog";
-import { getTasksApiTasksGet, getNextTaskRecommendationApiTrainingRecommendedTaskGet } from "@/lib/client";
+import {
+    getTasksApiTasksGet,
+    getNextTaskRecommendationApiTrainingRecommendedTaskGet,
+    getAdaptivePlanApiTrainingPlanGet,
+} from "@/lib/client";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { TaskSchema, TaskRecommendation } from "@/lib/client";
+import type {
+    TaskSchema,
+    TaskRecommendation,
+    PlanResponse,
+    PersonalRecommendation,
+} from "@/lib/client";
+import { AdaptivePlanBlock } from "@/components/adaptive-plan-block";
 
 export default async function Home() {
     const tasks = await getTasksApiTasksGet();
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value ?? null;
-    const recResp = await getNextTaskRecommendationApiTrainingRecommendedTaskGet(token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
+    const recResp =
+        await getNextTaskRecommendationApiTrainingRecommendedTaskGet(
+            token
+                ? { headers: { Authorization: `Bearer ${token}` } }
+                : undefined,
+        );
     let rec: TaskRecommendation | null = null;
     const recObj = recResp as unknown as Record<string, unknown>;
     console.log(recObj);
@@ -22,7 +37,22 @@ export default async function Home() {
     } else {
         rec = recResp as unknown as TaskRecommendation | null;
     }
-    
+
+    // Fetch adaptive plan
+    let plan: PersonalRecommendation[] = [];
+    if (token) {
+        const planResp = await getAdaptivePlanApiTrainingPlanGet({
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const planObj = planResp as unknown as Record<string, unknown>;
+        if (planObj && "data" in planObj) {
+            const planData = planObj.data as PlanResponse | null;
+            plan = planData?.recommendations ?? [];
+        } else if (planObj && "recommendations" in planObj) {
+            plan = (planObj as PlanResponse).recommendations ?? [];
+        }
+    }
+
     return (
         <div className="flex min-h-screen flex-col">
             <HeroBlock />
@@ -31,12 +61,18 @@ export default async function Home() {
                 <span>Решай задания и выигрывай олимпиады!</span>
             </header>
             {rec ? (
-                <div className="max-w-4xl p-4 mb-6 flex flex-start">
+                <div className="mb-6 flex flex-start">
                     <div className="p-4 border rounded bg-card flex items-center justify-between gap-4">
                         <div>
-                            <div className="text-xs text-muted-foreground uppercase">Рекомендую решить</div>
-                            <div className="font-semibold">{rec.theme} • {rec.difficulty}</div>
-                            <div className="text-sm text-muted-foreground mt-1">{rec.reason}</div>
+                            <div className="text-xs text-muted-foreground uppercase">
+                                Рекомендую решить
+                            </div>
+                            <div className="font-semibold">
+                                {rec.theme} • {rec.difficulty}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                                {rec.reason}
+                            </div>
                         </div>
                         <div>
                             <Link href={`/task/${rec.id}`}>
@@ -45,6 +81,9 @@ export default async function Home() {
                         </div>
                     </div>
                 </div>
+            ) : null}
+            {plan.length > 0 ? (
+                <AdaptivePlanBlock recommendations={plan} />
             ) : null}
             {tasks.data ? (
                 <Catalog tasks={tasks.data as TaskSchema[]} />

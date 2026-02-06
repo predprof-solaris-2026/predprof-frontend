@@ -256,10 +256,6 @@ export type PersonalRecommendation = {
      * 5 - самый высокий приоритет, 1 - низкий
      */
     priority: number;
-    /**
-     * Estimated Time Sec
-     */
-    estimated_time_sec?: number;
 };
 
 /**
