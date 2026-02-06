@@ -52,7 +52,6 @@ export default function LoginPage() {
         return /\S+@\S+\.\S+/.test(e);
     }
 
-    // Universal error extractor from server responses
     function extractServerError(data: unknown, fallback: string): string {
         try {
             if (!data) return fallback;
@@ -60,7 +59,6 @@ export default function LoginPage() {
 
             const rec = data as Record<string, unknown>;
 
-            // Check for "error" field (common API pattern)
             if ("error" in rec) {
                 const errVal = rec.error;
                 if (typeof errVal === "string") return errVal;
@@ -71,12 +69,10 @@ export default function LoginPage() {
                 }
             }
 
-            // Check for "detail" field (FastAPI validation errors)
             if ("detail" in rec) {
                 return extractDetail(rec.detail);
             }
 
-            // Check for "message" field
             if ("message" in rec) {
                 return String(rec.message);
             }
@@ -97,7 +93,6 @@ export default function LoginPage() {
                 if (obj.msg) return String(obj.msg);
                 if (obj.message) return String(obj.message);
                 if (obj.loc && obj.msg) {
-                    // FastAPI validation error format: { loc: ["body", "field"], msg: "error" }
                     return String(obj.msg);
                 }
             }
@@ -123,7 +118,6 @@ export default function LoginPage() {
                 },
             });
 
-            // Check if registration returned an error
             const regRec = regResp as Record<string, unknown>;
             if (regRec && "error" in regRec) {
                 setError(
@@ -182,7 +176,6 @@ export default function LoginPage() {
                 body: { username: email, password },
             });
 
-            // Check if response contains error field
             const respRec = resp as Record<string, unknown>;
             if (respRec && "error" in respRec) {
                 setError(

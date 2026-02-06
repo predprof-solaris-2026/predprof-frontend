@@ -38,7 +38,6 @@ export default async function Home() {
         rec = recResp as unknown as TaskRecommendation | null;
     }
 
-    // Fetch adaptive plan
     let plan: PersonalRecommendation[] = [];
     if (token) {
         const planResp = await getAdaptivePlanApiTrainingPlanGet({

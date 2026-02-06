@@ -106,7 +106,6 @@ export function AdaptivePlanBlock({ recommendations }: AdaptivePlanBlockProps) {
         }
     };
 
-    // Sort by priority (highest first)
     const sortedRecommendations = [...recommendations].sort(
         (a, b) => b.priority - a.priority,
     );

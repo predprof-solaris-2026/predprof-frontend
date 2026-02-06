@@ -65,19 +65,16 @@ export function Catalog({ tasks }: { tasks: TaskSchema[] }) {
     const atomRef = useRef<AtomIconHandle>(null);
     const bookTextRef = useRef<BookTextIconHandle>(null);
 
-    // Theme recommendations state
     const [themeRecommendations, setThemeRecommendations] = useState<
         DifficultyRecommendation[]
     >([]);
     const [loadingRecommendations, setLoadingRecommendations] =
         useState<boolean>(false);
 
-    // Fetch theme recommendations when tab changes
     useEffect(() => {
         const fetchThemeRecommendations = async () => {
             setLoadingRecommendations(true);
             try {
-                // Get token from cookies
                 const token = document.cookie
                     .split("; ")
                     .find((row) => row.startsWith("token="))

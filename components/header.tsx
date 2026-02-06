@@ -9,7 +9,7 @@ import { User, LogIn, Trophy } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import useUserStore from "@/lib/store/userStore";
 import { getTokenFromCookie, clearTokenCookie } from "@/lib/auth";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 export default function Header() {
     const router = useRouter();
@@ -30,30 +30,38 @@ export default function Header() {
 
     return (
         <header className="w-full flex justify-between px-5 py-3 items-center z-20 max-w-7xl">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 shrink-0">
                 <Link href="/">
                     <Image
                         src={logo}
                         alt="Logo"
                         height={48}
-                        className="rounded-xl h-12 w-auto"
+                        className="rounded-xl h-12 w-auto shrink-0"
                     />
                 </Link>
             </div>
             <div className="flex items-center gap-3">
                 {token ? (
+                    <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2">
-                        <Link href="/pvp">
-                            <Button variant="ghost" size="sm" className='py-2 sm:p-5 sm:pz-6'>
-                                <Trophy className="size-4" /> PVP
-                            </Button>
-                        </Link>
-                        <Link href="/profile">
-                            <Button variant="ghost" size="sm" className='px-3 py-2 sm:p-5'>
-                                <User className="size-4" /> Профиль
-                            </Button>
-                        </Link>
+                            <Link href="/pvp">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="py-2 sm:p-5 sm:pz-6"
+                                >
+                                    <Trophy className="size-4" /> PVP
+                                </Button>
+                            </Link>
+                            <Link href="/profile">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="px-3 py-2 sm:p-5"
+                                >
+                                    <User className="size-4" /> Профиль
+                                </Button>
+                            </Link>
                         </div>
                         <Button
                             variant="outline"
